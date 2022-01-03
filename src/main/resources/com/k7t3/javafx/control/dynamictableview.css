@@ -1,0 +1,15 @@
+.table-view {
+    -fx-table-cell-border-color: derive(-fx-color,5%);
+}
+
+.table-view > .column-header-background {
+    -fx-pref-height: 0px;
+    -fx-max-height: 0px;
+    -fx-min-height: 0px;
+}
+
+.table-cell {
+    -fx-padding: 0.166667em; /* 2px, plus border adds 1px */
+    -fx-border-color: transparent -fx-table-cell-border-color transparent transparent;
+    -fx-cell-size: 2.0em; /* 24 */
+}

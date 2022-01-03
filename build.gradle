@@ -1,0 +1,40 @@
+plugins {
+    id 'java'
+    id "org.openjfx.javafxplugin" version "0.0.10"
+}
+
+group 'com.k7t3.javafx.control'
+version '0.1'
+
+repositories {
+    mavenCentral()
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_11
+    targetCompatibility = JavaVersion.VERSION_11
+
+    sourceSets.main.java.exclude("**/module-info.java")
+}
+
+javafx {
+    version = '17.0.0.1'
+    modules = [ 'javafx.controls' ]
+}
+
+dependencies {
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.5.1'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.5.1'
+    testImplementation "org.testfx:testfx-junit5:4.0.16-alpha"
+}
+
+test {
+    useJUnitPlatform()
+
+    //Options for TestFX
+//    jvmArgs = [
+//            '--add-modules', 'org.testfx,org.testfx.junit5',
+//            '--add-reads', 'com.k7t3m.dynamictableview=org.testfx.junit5',
+//            '--add-opens', 'javafx.graphics/com.sun.javafx.application=org.testfx'
+//    ]
+}
