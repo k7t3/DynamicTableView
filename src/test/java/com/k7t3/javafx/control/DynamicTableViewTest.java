@@ -8,8 +8,6 @@ import org.testfx.api.FxAssert;
 import org.testfx.framework.junit5.ApplicationTest;
 import org.testfx.matcher.control.LabeledMatchers;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 class DynamicTableViewTest extends ApplicationTest {
 
     private DynamicTableView<String> table;
@@ -18,8 +16,8 @@ class DynamicTableViewTest extends ApplicationTest {
     public void start(Stage stage) throws Exception {
         System.out.println("テストアプリケーションスタート");
         table = new DynamicTableView<>();
-        table.requestCellSizeProperty().set(100);
-        table.getContentItems().addAll("this is test word", "this is test word", "this is test word", "this is test word");
+        table.setColumnWidth(100);
+        table.getItems().addAll("this is test word", "this is test word", "this is test word", "this is test word");
         stage.setScene(new Scene(new StackPane(table), 300, 400));
         stage.show();
     }
@@ -27,6 +25,7 @@ class DynamicTableViewTest extends ApplicationTest {
     @Test
     public void test() {
         System.out.println("テスト開始");
-        FxAssert.verifyThat(".default-text-label", LabeledMatchers.hasText("this is test word"));
+
+        FxAssert.verifyThat("." + DefaultDynamicTableCell.DEFAULT_TEXT_STYLE_CLASS, LabeledMatchers.hasText("this is test word"));
     }
 }

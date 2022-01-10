@@ -1,12 +1,13 @@
 package com.k7t3.javafx.control;
 
-import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.property.*;
 import javafx.scene.control.TableColumn;
+
+import java.util.function.BiFunction;
 
 class DynamicTableColumn<T> extends TableColumn<TableDataRowModel<T>, T> {
 
-    private final DynamicTableView<T> control;
+    protected final DynamicTableView<T> control;
 
     int columnIndex;
 
@@ -17,12 +18,16 @@ class DynamicTableColumn<T> extends TableColumn<TableDataRowModel<T>, T> {
         this.control = control;
         this.columnIndex = index;
         this.columnSizeProperty = new SimpleDoubleProperty();
-        init();
+
+        if (control.getCellFactory() != null)
+            init(control.getCellFactory());
+        else
+            init(DefaultDynamicTableCell::new);
     }
 
-    private void init() {
+    private void init(BiFunction<Integer, ReadOnlyDoubleProperty, DynamicTableCell<T>> factory) {
         this.setCellValueFactory(new DynamicTableCellValueFactory<>());
-        this.setCellFactory(column -> control.getCellFactory().apply(columnIndex, columnSizeProperty));
+        this.setCellFactory(column -> factory.apply(columnIndex, columnSizeProperty));
     }
 
 }

@@ -30,7 +30,6 @@ class TableDataRowModel<T> {
     }
 
     void update() {
-        // バリューセットゲットキー
         // プロパティの値を更新
         properties.forEach((key, value) -> value.set(get(key)));
     }

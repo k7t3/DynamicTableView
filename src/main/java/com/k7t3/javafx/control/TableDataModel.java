@@ -1,19 +1,17 @@
 package com.k7t3.javafx.control;
 
-import javafx.beans.property.IntegerProperty;
-import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 
 class TableDataModel<T> {
 
-    ObservableList<T> values = FXCollections.observableArrayList();
+    ObjectProperty<SortedList<T>> sortedProperty = new SimpleObjectProperty<>();
 
-    FilteredList<T> filtered = new FilteredList<>(values);
-
-    SortedList<T> sorted = new SortedList<>(filtered);
+    SortedList<T> getSorted() {
+        return sortedProperty.get();
+    }
 
     ObservableList<TableDataRowModel<T>> rows = FXCollections.observableArrayList();
 
@@ -38,13 +36,13 @@ class TableDataModel<T> {
 
     void normalizeRows() {
         int columnCount = columnCountProperty.get();
-        int rowCount = (int)Math.ceil(sorted.size() / (double)columnCount);
+        int rowCount = (int)Math.ceil(getSorted().size() / (double)columnCount);
 
         normalizeRowCount(rowCount);
     }
 
     T get(int rowIndex, int columnIndex) {
-        int count = sorted.size();
+        int count = getSorted().size();
         int columnCount = columnCountProperty.get();
 
         int skip = rowIndex * columnCount;
@@ -54,7 +52,7 @@ class TableDataModel<T> {
             return null;
         }
 
-        return sorted.get(index);
+        return getSorted().get(index);
     }
 
 }
