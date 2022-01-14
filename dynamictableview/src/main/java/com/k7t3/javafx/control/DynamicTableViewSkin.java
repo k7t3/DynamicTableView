@@ -64,7 +64,7 @@ public class DynamicTableViewSkin<T> implements Skin<DynamicTableView<T>> {
 
         tableView.placeholderProperty().bind(control.placeHolderProperty());
 
-        // Mac環境において発生するセル選択解除時に発生するExceptionはOpenJFX18で修正されるらしい
+        // Mac環境において発生するマウスカーソルでのセル選択時に発生するExceptionはOpenJFX18で修正されるらしい
         tableView.getSelectionModel().setCellSelectionEnabled(true);
         tableView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 

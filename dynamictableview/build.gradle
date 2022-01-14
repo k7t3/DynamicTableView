@@ -1,0 +1,96 @@
+plugins {
+    id 'java'
+    id "org.openjfx.javafxplugin" version "0.0.10"
+    id 'signing'
+    id 'maven-publish'
+}
+
+group 'com.k7t3.javafx.control'
+version '0.1'
+
+repositories {
+    mavenCentral()
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_11
+    targetCompatibility = JavaVersion.VERSION_11
+
+    sourceSets.main.java.exclude("**/module-info.java")
+
+    withJavadocJar()
+    withSourcesJar()
+}
+
+javafx {
+//    version = '17.0.0.1'
+    version = 13
+    modules = [ 'javafx.controls' ]
+}
+
+dependencies {
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.5.1'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.5.1'
+    testImplementation "org.testfx:testfx-junit5:4.0.16-alpha"
+}
+
+test {
+    useJUnitPlatform()
+}
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            artifactId = 'DynamicTableView'
+            from components.java
+            pom {
+                name = 'DynamicTableView'
+                description = ''
+                url = 'https://github.com/k7t3/DynamicTableView'
+                licenses {
+                    license {
+                        name = 'The Apache License, Version 2.0'
+                        url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                    }
+                }
+                developers {
+                    developer {
+                        id = 'k7t3'
+                        name = 'k7t3'
+                        email = 'k7t3annnn@gmail.com'
+                    }
+                }
+                scm {
+                    connection = 'git@github.com:k7t3/DynamicTableView.git'
+                    developerConnection = 'git@github.com:k7t3/DynamicTableView.git'
+                    url = 'https://github.com/k7t3/DynamicTableView'
+                }
+            }
+        }
+    }
+    repositories {
+        maven {
+            def releasesRepoUrl = "https://oss.sonatype.org/service/local/staging/deploy/maven2"
+            def snapshotsRepoUrl = "https://oss.sonatype.org/content/repositories/snapshots"
+            url = version.endsWith('SNAPSHOT') ? snapshotsRepoUrl : releasesRepoUrl
+            credentials {
+                username = "${sonatypeUsername}"
+                password = "${sonatypePassword}"
+            }
+        }
+    }
+}
+
+signing {
+    sign publishing.publications.mavenJava
+}
+
+javadoc {
+    if (JavaVersion.current().isJava9Compatible()) {
+        options.addBooleanOption('html5', true)
+    }
+}

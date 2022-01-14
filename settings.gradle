@@ -1,2 +1,2 @@
-rootProject.name = 'dynamictableview'
+include 'dynamictableview', 'sample'
 

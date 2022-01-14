@@ -4,7 +4,7 @@ import javafx.beans.property.ReadOnlyDoubleProperty;
 import javafx.scene.control.Label;
 import javafx.scene.layout.StackPane;
 
-public class DefaultDynamicTableCell<T> extends DynamicTableCell<T> {
+class DefaultDynamicTableCell<T> extends DynamicTableCell<T> {
 
     public static final String DEFAULT_TEXT_STYLE_CLASS = "default-text-label";
 

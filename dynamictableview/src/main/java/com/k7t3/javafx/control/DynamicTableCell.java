@@ -20,6 +20,12 @@ public abstract class DynamicTableCell<T> extends TableCell<TableDataRowModel<T>
         this.columnWidthProperty = columnWidthProperty;
         prefWidthProperty().bind(columnWidthProperty);
         prefHeightProperty().bind(columnWidthProperty);
+
+        graphicProperty().addListener((ob, o, n) -> {
+            if (n != null) {
+                n.setMouseTransparent(true);
+            }
+        });
     }
 
     @Override
