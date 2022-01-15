@@ -1,4 +1,4 @@
-package com.k7t3.javafx.control;
+package io.github.k7t3.javafx;
 
 import javafx.beans.property.*;
 import javafx.scene.control.TableColumn;

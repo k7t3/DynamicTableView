@@ -1,4 +1,4 @@
-package com.k7t3.javafx.control;
+package io.github.k7t3.javafx;
 
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
@@ -12,10 +12,13 @@ import java.util.function.BiFunction;
 
 /**
  * 横幅に応じて動的に列数を変更するテーブルコントロールです。
- * @param <T>
+ * @param <T> 取り扱うデータタイプ
  */
 public class DynamicTableView<T> extends Control {
 
+    /**
+     * 列の規定の幅(200d)を表します。
+     */
     public static double DEFAULT_COLUMN_WIDTH = 200d;
 
     public DynamicTableView() {
@@ -26,15 +29,15 @@ public class DynamicTableView<T> extends Control {
             = new SimpleObjectProperty<>(null);
 
     /**
-     * 現在定義されているセルファクトリを返します。既定値は{@link DefaultDynamicTableCell}です。
+     * 現在定義されているセルファクトリを返します。
      * @return 現在定義されているセルファクトリ
      */
     public BiFunction<Integer, ReadOnlyDoubleProperty, DynamicTableCell<T>> getCellFactory() {
-        return cellFactoryProperty.get();
+        return cellFactoryProperty().get();
     }
 
     /**
-     * セルファクトリプロパティ。既定値は{@link DefaultDynamicTableCell}です。
+     * セルファクトリプロパティ。
      * @return セルファクトリプロパティ
      */
     public ObjectProperty<BiFunction<Integer, ReadOnlyDoubleProperty, DynamicTableCell<T>>> cellFactoryProperty() {
@@ -46,21 +49,21 @@ public class DynamicTableView<T> extends Control {
      * @param cellFactory {@link DynamicTableCell}を継承したクラスを生成するセルファクトリ。
      */
     public void setCellFactory(BiFunction<Integer, ReadOnlyDoubleProperty, DynamicTableCell<T>> cellFactory) {
-        this.cellFactoryProperty.set(cellFactory);
+        this.cellFactoryProperty().set(cellFactory);
     }
 
     private final DoubleProperty columnWidthProperty = new SimpleDoubleProperty(DEFAULT_COLUMN_WIDTH);
 
     /**
-     * テーブルの列の幅を返します。既定値は200です。
+     * テーブルの列の幅を返します。既定値は{@link DynamicTableView#DEFAULT_COLUMN_WIDTH}です。
      * @return 列の幅
      */
     public double getColumnWidth() {
-        return columnWidthProperty.get();
+        return columnWidthProperty().get();
     }
 
     /**
-     * 列の幅を持つプロパティ。既定値は200です。
+     * 列の幅を持つプロパティ。既定値は{@link DynamicTableView#DEFAULT_COLUMN_WIDTH}
      * @return 列の幅を持つプロパティ
      */
     public DoubleProperty columnWidthProperty() {
@@ -72,7 +75,7 @@ public class DynamicTableView<T> extends Control {
      * @param cellSize 列の幅
      */
     public void setColumnWidth(double cellSize) {
-        this.columnWidthProperty.set(cellSize);
+        this.columnWidthProperty().set(cellSize);
     }
 
     private final ObjectProperty<Node> placeHolderProperty = new SimpleObjectProperty<>(new Label());
@@ -83,7 +86,7 @@ public class DynamicTableView<T> extends Control {
      * @return 要素が一つもないことを示すNode。
      */
     public Node getPlaceHolder() {
-        return placeHolderProperty.get();
+        return placeHolderProperty().get();
     }
 
     /**
@@ -100,10 +103,10 @@ public class DynamicTableView<T> extends Control {
      * @param placeHolder 要素が一つもないことを示すNode。
      */
     public void setPlaceHolder(Node placeHolder) {
-        this.placeHolderProperty.set(placeHolder);
+        this.placeHolderProperty().set(placeHolder);
     }
 
-    private final ObjectProperty<ObservableList<T>> items = new SimpleObjectProperty<>(FXCollections.observableArrayList());
+    private final ObjectProperty<ObservableList<T>> itemsProperty = new SimpleObjectProperty<>(FXCollections.observableArrayList());
 
     /**
      * 表示する要素リストを返します。
@@ -118,7 +121,7 @@ public class DynamicTableView<T> extends Control {
      * @return 表示する要素リストを持つプロパティ。
      */
     public ObjectProperty<ObservableList<T>> itemsProperty() {
-        return items;
+        return itemsProperty;
     }
 
     /**
@@ -129,53 +132,53 @@ public class DynamicTableView<T> extends Control {
         itemsProperty().set(items);
     }
 
-    // これ内部に保つ必要ある？外からsetItemsでFilterなりSortedなり適用したリスト当てはめればいいんじゃ？
-    final ReadOnlyObjectWrapper<FilteredList<T>> filtered = new ReadOnlyObjectWrapper<>(new FilteredList<>(items.get()));
+    // これ内部に持つ必要ある？外からsetItemsでFilterなりSortedなり適用したリスト当てはめればいいんじゃ？
+    final ReadOnlyObjectWrapper<FilteredList<T>> filteredItemsProperty = new ReadOnlyObjectWrapper<>(new FilteredList<>(itemsProperty.get()));
 
     /**
      * {@link DynamicTableView#getItems()}をラップしたリストを返します。
      * @return {@link DynamicTableView#getItems()}をラップしたリスト
      */
-    public FilteredList<T> getFiltered() {
-        return filtered.get();
+    public FilteredList<T> getFilteredItems() {
+        return filteredItemsProperty().get();
     }
 
     /**
      * {@link DynamicTableView#getItems()}をラップしたリストプロパティを返します。
      * @return {@link DynamicTableView#getItems()}をラップしたリストプロパティ
      */
-    public ReadOnlyObjectProperty<FilteredList<T>> filteredProperty() {
-        return filtered.getReadOnlyProperty();
+    public ReadOnlyObjectProperty<FilteredList<T>> filteredItemsProperty() {
+        return filteredItemsProperty.getReadOnlyProperty();
     }
 
-    // これ内部に保つ必要ある？外からsetItemsでFilterなりSortedなり適用したリスト当てはめればいいんじゃ？
-    final ReadOnlyObjectWrapper<SortedList<T>> sorted = new ReadOnlyObjectWrapper<>(new SortedList<>(filtered.get()));
+    // これ内部に持つ必要ある？外からsetItemsでFilterなりSortedなり適用したリスト当てはめればいいんじゃ？
+    final ReadOnlyObjectWrapper<SortedList<T>> sortedItemsProperty = new ReadOnlyObjectWrapper<>(new SortedList<>(filteredItemsProperty.get()));
 
     /**
      * {@link DynamicTableView#getItems()}をラップしたリストを返します。
      * @return {@link DynamicTableView#getItems()}をラップしたリスト
      */
-    public SortedList<T> getSorted() {
-        return sorted.get();
+    public SortedList<T> getSortedItems() {
+        return sortedItemsProperty().get();
     }
 
     /**
      * {@link DynamicTableView#getItems()}をラップしたリストプロパティを返します。
      * @return {@link DynamicTableView#getItems()}をラップしたリストプロパティ
      */
-    public ReadOnlyObjectProperty<SortedList<T>> sortedProperty() {
-        return sorted;
+    public ReadOnlyObjectProperty<SortedList<T>> sortedItemsProperty() {
+        return sortedItemsProperty.getReadOnlyProperty();
     }
 
-    final ReadOnlyObjectWrapper<T> selected = new ReadOnlyObjectWrapper<>();
+    final ReadOnlyObjectWrapper<T> selectedItemProperty = new ReadOnlyObjectWrapper<>();
 
     /**
      * 選択しているアイテムを返します。複数のアイテムを選択しているときは
      * 最後に選択されたアイテムが返されます。
      * @return 最後に選択されたアイテム
      */
-    public T getSelected() {
-        return selected.get();
+    public T getSelectedItem() {
+        return selectedItemProperty().get();
     }
 
     /**
@@ -183,8 +186,8 @@ public class DynamicTableView<T> extends Control {
      * 最後に選択されたアイテムが返されます。
      * @return 選択しているアイテムのプロパティ
      */
-    public ReadOnlyObjectProperty<T> selectedProperty() {
-        return selected.getReadOnlyProperty();
+    public ReadOnlyObjectProperty<T> selectedItemProperty() {
+        return selectedItemProperty.getReadOnlyProperty();
     }
 
     final ObservableList<T> selectedItems = FXCollections.observableArrayList();
@@ -206,6 +209,6 @@ public class DynamicTableView<T> extends Control {
 
     @Override
     public String getUserAgentStylesheet() {
-        return "/com/k7t3/javafx/control/dynamictableview.css";
+        return "/io/github/k7t3/javafx/dynamictableview.css";
     }
 }

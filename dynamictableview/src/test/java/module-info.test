@@ -1,10 +1,10 @@
 --add-modules
     org.testfx,org.testfx.junit5
 --add-reads
-    com.k7t3m.dynamictableview=org.testfx
+    io.github.k7t3m.dynamictableview=org.testfx
 --add-reads
-    com.k7t3m.dynamictableview=org.testfx.junit5
+    io.github.k7t3m.dynamictableview=org.testfx.junit5
 --add-opens
     javafx.graphics/com.sun.javafx.application=org.testfx
 --add-opens
-    com.k7t3m.dynamictableview/com.k7t3.javafx.control=org.testfx.junit5
+    io.github.k7t3m.dynamictableview/com.github.k7t3.javafx=org.testfx.junit5

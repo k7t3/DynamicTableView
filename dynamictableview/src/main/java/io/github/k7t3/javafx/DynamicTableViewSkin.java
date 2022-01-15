@@ -1,4 +1,4 @@
-package com.k7t3.javafx.control;
+package io.github.k7t3.javafx;
 
 import javafx.beans.property.*;
 import javafx.collections.*;
@@ -10,17 +10,15 @@ import javafx.scene.control.*;
 import java.util.List;
 import java.util.logging.Logger;
 
-public class DynamicTableViewSkin<T> implements Skin<DynamicTableView<T>> {
+class DynamicTableViewSkin<T> implements Skin<DynamicTableView<T>> {
 
     private static final Logger logger = Logger.getLogger(DynamicTableViewSkin.class.getName());
 
-    final IntegerProperty columnCountProperty = new SimpleIntegerProperty();
+    private final IntegerProperty columnCountProperty = new SimpleIntegerProperty();
 
-    final ReadOnlyIntegerWrapper pictureCountProperty = new ReadOnlyIntegerWrapper();
+//    private final ReadOnlyIntegerWrapper selectedCountProperty = new ReadOnlyIntegerWrapper();
 
-    final ReadOnlyIntegerWrapper selectedCountProperty = new ReadOnlyIntegerWrapper();
-
-    final TableDataModel<T> dataModel = new TableDataModel<>();
+    private final TableDataModel<T> dataModel = new TableDataModel<>();
 
     private final TableView<TableDataRowModel<T>> tableView;
 
@@ -36,20 +34,18 @@ public class DynamicTableViewSkin<T> implements Skin<DynamicTableView<T>> {
         while (c.next()) {
             if (c.wasUpdated()) {
                 for (int i = c.getFrom(); i < c.getTo(); i++) {
-                    // updated
+                    // TODO updated
                 }
             } else if (c.wasPermutated()) {
                 for (int i = c.getFrom(); i < c.getTo(); i++) {
-                    // permutated
+                    // TODO permutated
                 }
             } else {
                 if (c.wasAdded()) {
-                    pictureCountProperty.set(c.getList().size());
                     if (!columnCountChanged) {
                         dataModel.normalizeRows();
                     }
                 } else if (c.wasRemoved()) {
-                    pictureCountProperty.set(c.getList().size());
                     if (!columnCountChanged) {
                         dataModel.normalizeRows();
                     }
@@ -64,19 +60,20 @@ public class DynamicTableViewSkin<T> implements Skin<DynamicTableView<T>> {
 
         tableView.placeholderProperty().bind(control.placeHolderProperty());
 
-        // Mac環境において発生するマウスカーソルでのセル選択時に発生するExceptionはOpenJFX18で修正されるらしい
+        // 複数選択したセルをクリックして解除する時に発生するExceptionはOpenJFX18で修正されるらしい
+        // https://bugs.openjdk.java.net/browse/JDK-8273324
         tableView.getSelectionModel().setCellSelectionEnabled(true);
         tableView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 
         control.itemsProperty().addListener((ob, o, n) -> {
             if (n == null) {
-                control.filtered.set(null);
+                control.filteredItemsProperty.set(null);
             } else {
-                control.filtered.set(new FilteredList<>(n));
-                control.sorted.set(new SortedList<>(control.filtered.get()));
+                control.filteredItemsProperty.set(new FilteredList<>(n));
+                control.sortedItemsProperty.set(new SortedList<>(control.filteredItemsProperty.get()));
             }
         });
-        control.sortedProperty().addListener((ob, o, n) -> {
+        control.sortedItemsProperty().addListener((ob, o, n) -> {
             if (o != null) {
                 o.removeListener(this::itemsChangeListener);
             }
@@ -86,7 +83,7 @@ public class DynamicTableViewSkin<T> implements Skin<DynamicTableView<T>> {
             }
         });
 
-        dataModel.sortedProperty.bind(control.sortedProperty());
+        dataModel.sortedProperty.bind(control.sortedItemsProperty());
         dataModel.columnCountProperty.bind(columnCountProperty);
         tableView.setItems(dataModel.rows);
 
@@ -148,23 +145,19 @@ public class DynamicTableViewSkin<T> implements Skin<DynamicTableView<T>> {
         control.selectedItems.addListener((ListChangeListener<? super T>) c -> {
             while (c.next()) {
                 if (c.wasRemoved()) {
-                    selectedCountProperty.set(c.getList().size());
-
                     List<? extends T> list = c.getList();
                     if (list.isEmpty()) {
-                        control.selected.set(null);
+                        control.selectedItemProperty.set(null);
                     } else {
                         T picture = list.get(list.size() - 1);
-                        control.selected.set(picture);
+                        control.selectedItemProperty.set(picture);
                     }
 
                 }
                 if (c.wasAdded()) {
-                    selectedCountProperty.set(c.getList().size());
-
                     List<? extends T> list = c.getAddedSubList();
                     T picture = list.get(list.size() - 1);
-                    control.selected.set(picture);
+                    control.selectedItemProperty.set(picture);
 
                 }
             }

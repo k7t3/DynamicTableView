@@ -1,6 +1,6 @@
-package com.k7t3.sample;
+package io.github.k7t3.javafx.sample;
 
-import com.k7t3.javafx.control.DynamicTableView;
+import io.github.k7t3.javafx.DynamicTableView;
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.layout.StackPane;

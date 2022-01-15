@@ -5,8 +5,8 @@ plugins {
     id 'maven-publish'
 }
 
-group 'com.k7t3.javafx.control'
-version '0.1'
+group 'io.github.k7t3'
+version '0.1.0-SNAPSHOT'
 
 repositories {
     mavenCentral()
@@ -15,8 +15,6 @@ repositories {
 java {
     sourceCompatibility = JavaVersion.VERSION_11
     targetCompatibility = JavaVersion.VERSION_11
-
-    sourceSets.main.java.exclude("**/module-info.java")
 
     withJavadocJar()
     withSourcesJar()
@@ -65,8 +63,8 @@ publishing {
                     }
                 }
                 scm {
-                    connection = 'git@github.com:k7t3/DynamicTableView.git'
-                    developerConnection = 'git@github.com:k7t3/DynamicTableView.git'
+                    connection = 'scm:git:https://github.com/k7t3/DynamicTableView'
+                    developerConnection = 'scm:git:git@github.com:k7t3/DynamicTableView.git'
                     url = 'https://github.com/k7t3/DynamicTableView'
                 }
             }
@@ -74,12 +72,16 @@ publishing {
     }
     repositories {
         maven {
-            def releasesRepoUrl = "https://oss.sonatype.org/service/local/staging/deploy/maven2"
-            def snapshotsRepoUrl = "https://oss.sonatype.org/content/repositories/snapshots"
+            def releasesRepoUrl = 'https://s01.oss.sonatype.org/content/repositories/releases/'
+            def snapshotsRepoUrl = 'https://s01.oss.sonatype.org/content/repositories/snapshots/'
             url = version.endsWith('SNAPSHOT') ? snapshotsRepoUrl : releasesRepoUrl
+
             credentials {
-                username = "${sonatypeUsername}"
-                password = "${sonatypePassword}"
+                def propertyUsername = project.hasProperty('sonatypeUsername') ? project.property('sonatypeUsername') : 'undefined username'
+                def propertyPassword = project.hasProperty('sonatypePassword') ? project.property('sonatypePassword') : 'undefined password'
+
+                username = propertyUsername
+                password = propertyPassword
             }
         }
     }
@@ -89,8 +91,32 @@ signing {
     sign publishing.publications.mavenJava
 }
 
+compileJava {
+    options.encoding = 'UTF-8'
+}
+
 javadoc {
-    if (JavaVersion.current().isJava9Compatible()) {
-        options.addBooleanOption('html5', true)
+    options.windowTitle("DynamicTableView")
+    options.addBooleanOption('html5', true)
+    options.addBooleanOption('javafx', true)
+
+    def javaVersion = JavaVersion.current().majorVersion
+    options.links("https://openjfx.io/javadoc/"+ javaVersion)
+    options.links("https://docs.oracle.com/en/java/javase/" + javaVersion + "/docs/api")
+}
+
+//task propertyPrintTest {
+//    def username = project.hasProperty('sonatypeUsername') ? project.property('sonatypeUsername') : 'undefined username'
+//    def password = project.hasProperty('sonatypePassword') ? project.property('sonatypePassword') : 'undefined password'
+//
+//    System.out.println('propertyPrintTest')
+//    System.out.println(String.format("username = %s, password = %s", username, password))
+//}
+
+tasks.withType(Javadoc) {
+    doFirst {
+        options.modulePath = [] + classpath.files
+        options.classpath = []
+        System.out.println(classpath.files)
     }
 }

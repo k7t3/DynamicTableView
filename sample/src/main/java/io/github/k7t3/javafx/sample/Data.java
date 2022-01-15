@@ -1,4 +1,4 @@
-package com.k7t3.sample;
+package io.github.k7t3.javafx.sample;
 
 import javafx.scene.paint.Color;
 
@@ -19,5 +19,13 @@ public class Data {
 
     public Color getColor() {
         return color;
+    }
+
+    @Override
+    public String toString() {
+        return "Data{" +
+                "name='" + name + '\'' +
+                ", color=" + color +
+                '}';
     }
 }

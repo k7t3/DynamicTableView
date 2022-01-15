@@ -1,4 +1,4 @@
-package com.k7t3.javafx.control;
+package io.github.k7t3.javafx;
 
 import javafx.scene.Scene;
 import javafx.scene.layout.StackPane;
@@ -13,7 +13,7 @@ class DynamicTableViewTest extends ApplicationTest {
     private DynamicTableView<String> table;
 
     @Override
-    public void start(Stage stage) throws Exception {
+    public void start(Stage stage) {
         System.out.println("テストアプリケーションスタート");
         table = new DynamicTableView<>();
         table.setColumnWidth(100);
