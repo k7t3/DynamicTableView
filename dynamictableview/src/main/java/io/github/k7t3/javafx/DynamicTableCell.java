@@ -28,12 +28,6 @@ public abstract class DynamicTableCell<T> extends TableCell<TableDataRowModel<T>
         this.cellSizeProperty = cellSizeProperty;
         prefWidthProperty().bind(cellSizeProperty);
         prefHeightProperty().bind(cellSizeProperty);
-
-        graphicProperty().addListener((ob, o, n) -> {
-            if (n != null) {
-                n.setMouseTransparent(true);
-            }
-        });
     }
 
     private Node view;
