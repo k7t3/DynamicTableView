@@ -8,11 +8,10 @@ import javafx.scene.Node;
 import javafx.scene.control.*;
 
 import java.util.List;
-import java.util.logging.Logger;
 
 class DynamicTableViewSkin<T> implements Skin<DynamicTableView<T>> {
 
-    private static final Logger logger = Logger.getLogger(DynamicTableViewSkin.class.getName());
+    private static final System.Logger LOGGER = System.getLogger(DynamicTableViewSkin.class.getName());
 
     private final IntegerProperty columnCountProperty = new SimpleIntegerProperty();
 
@@ -56,7 +55,7 @@ class DynamicTableViewSkin<T> implements Skin<DynamicTableView<T>> {
     }
 
     private void init() {
-        logger.fine("init instance.");
+        LOGGER.log(System.Logger.Level.DEBUG, "init instance");
 
         tableView.placeholderProperty().bind(control.placeHolderProperty());
 
@@ -68,6 +67,7 @@ class DynamicTableViewSkin<T> implements Skin<DynamicTableView<T>> {
         control.itemsProperty().addListener((ob, o, n) -> {
             if (n == null) {
                 control.filteredItemsProperty.set(null);
+                control.sortedItemsProperty.set(null);
             } else {
                 control.filteredItemsProperty.set(new FilteredList<>(n));
                 control.sortedItemsProperty.set(new SortedList<>(control.filteredItemsProperty.get()));
@@ -82,6 +82,7 @@ class DynamicTableViewSkin<T> implements Skin<DynamicTableView<T>> {
                 n.addListener(this::itemsChangeListener);
             }
         });
+        control.getSortedItems().addListener(this::itemsChangeListener);
 
         dataModel.sortedProperty.bind(control.sortedItemsProperty());
         dataModel.columnCountProperty.bind(columnCountProperty);

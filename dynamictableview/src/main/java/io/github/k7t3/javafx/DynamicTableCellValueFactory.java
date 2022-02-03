@@ -5,11 +5,9 @@ import javafx.beans.value.ObservableValue;
 import javafx.scene.control.TableColumn;
 import javafx.util.Callback;
 
-import java.util.logging.Logger;
-
 class DynamicTableCellValueFactory<T> implements Callback<TableColumn.CellDataFeatures<TableDataRowModel<T> , T>, ObservableValue<T>> {
 
-    private static final Logger LOGGER = Logger.getLogger(DynamicTableCellValueFactory.class.getName());
+    private static final System.Logger LOGGER = System.getLogger(DynamicTableCellValueFactory.class.getName());
 
     @Override
     public ObservableValue<T> call(TableColumn.CellDataFeatures<TableDataRowModel<T>, T> param) {
@@ -21,7 +19,7 @@ class DynamicTableCellValueFactory<T> implements Callback<TableColumn.CellDataFe
             return rowData.getProperty(columnIndex);
         }
 
-        LOGGER.warning("unknown type column");
+        LOGGER.log(System.Logger.Level.WARNING, "unknown type column");
 
         return new ReadOnlyObjectWrapper<>();
     }
