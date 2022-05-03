@@ -64,6 +64,7 @@ class DynamicTableViewSkin<T> implements Skin<DynamicTableView<T>> {
         tableView.getSelectionModel().setCellSelectionEnabled(true);
         tableView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 
+        // アイテムリストが更新されたらFilterとSortedも更新するリスナを追加
         control.itemsProperty().addListener((ob, o, n) -> {
             if (n == null) {
                 control.filteredItemsProperty.set(null);
@@ -73,16 +74,33 @@ class DynamicTableViewSkin<T> implements Skin<DynamicTableView<T>> {
                 control.sortedItemsProperty.set(new SortedList<>(control.filteredItemsProperty.get()));
             }
         });
+        // Sortedリストが更新されたらときに各種実施する処理を書いたリスナを追加
         control.sortedItemsProperty().addListener((ob, o, n) -> {
             if (o != null) {
+                // 監視リスナを削除
                 o.removeListener(this::itemsChangeListener);
             }
 
             if (n != null) {
+                // 監視リスナを追加
                 n.addListener(this::itemsChangeListener);
+                // Comparatorが更新されたときにTableViewをリフレッシュするリスナを追加
+                n.comparatorProperty().addListener((observable, oldValue, newValue) -> tableView.refresh());
             }
         });
+        // Sortedリストが更新されたらときに各種実施する処理を書いたリスナを追加
+        control.filteredItemsProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue != null) {
+                // Filter用Predicateが更新されたときにTableViewをリフレッシュする
+                newValue.predicateProperty().addListener((observable1, oldValue1, newValue1) -> {
+                    tableView.refresh();
+                });
+            }
+        });
+        // 初期Sortedリストに一覧更新用リスナを追加
         control.getSortedItems().addListener(this::itemsChangeListener);
+        // 初期SortedリストにComparatorが更新されたときにTableViewをリフレッシュするリスナを追加
+        control.getSortedItems().comparatorProperty().addListener((ob, o, n) -> tableView.refresh());
 
         dataModel.sortedProperty.bind(control.sortedItemsProperty());
         dataModel.columnCountProperty.bind(columnCountProperty);
