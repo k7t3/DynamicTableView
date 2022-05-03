@@ -1,9 +1,9 @@
 --add-modules
     org.testfx
 --add-reads
-    io.github.k7t3m.dynamictableview=org.testfx
+    io.github.k7t3m.dtv=org.testfx
 --add-reads
-    io.github.k7t3m.dynamictableview=org.testfx.junit5
+    io.github.k7t3m.dtv=org.testfx.junit5
 --add-opens
     javafx.graphics/com.sun.javafx.application=org.testfx
 --add-opens
@@ -11,4 +11,4 @@
 --add-opens
     javafx.graphics/com.sun.glass.ui=org.testfx.monocle
 --add-opens
-    io.github.k7t3m.dynamictableview/io.github.k7t3.javafx=org.testfx.junit5
+    io.github.k7t3m.dtv/io.github.k7t3.javafx=org.testfx.junit5
