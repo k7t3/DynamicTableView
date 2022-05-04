@@ -1,15 +1,16 @@
 package io.github.k7t3.javafx;
 
-import javafx.beans.property.*;
-import javafx.collections.*;
+import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.SimpleIntegerProperty;
+import javafx.collections.ListChangeListener;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
-import javafx.scene.Node;
+import javafx.event.EventType;
 import javafx.scene.control.*;
 
 import java.util.List;
 
-class DynamicTableViewSkin<T> implements Skin<DynamicTableView<T>> {
+class DynamicTableViewSkin<T> extends SkinBase<DynamicTableView<T>> {
 
     private static final System.Logger LOGGER = System.getLogger(DynamicTableViewSkin.class.getName());
 
@@ -24,7 +25,8 @@ class DynamicTableViewSkin<T> implements Skin<DynamicTableView<T>> {
     private final DynamicTableView<T> control;
 
     public DynamicTableViewSkin(DynamicTableView<T> control) {
-        this.control = control;
+        super(control);
+        this.control = getSkinnable();
         this.tableView = new TableView<>();
         init();
     }
@@ -57,7 +59,21 @@ class DynamicTableViewSkin<T> implements Skin<DynamicTableView<T>> {
     private void init() {
         LOGGER.log(System.Logger.Level.DEBUG, "init instance");
 
+        getChildren().add(tableView);
+
+        // 選択項目のクリアアクションを定義
+        control.clearSelectionAction = () -> {
+            tableView.getSelectionModel().clearSelection();
+            tableView.getFocusModel().focus(0, tableView.getVisibleLeafColumn(0));
+        };
+
         tableView.placeholderProperty().bind(control.placeHolderProperty());
+        tableView.addEventHandler(EventType.ROOT, event -> {
+            // TableView内で完結したイベントをDynamicTableViewコントロールへ移送する
+            if (event.isConsumed() && event.getSource() == tableView) {
+                control.fireEvent(event.copyFor(tableView, control));
+            }
+        });
 
         // 複数選択したセルをクリックして解除する時に発生するExceptionはOpenJFX18で修正されるらしい
         // https://bugs.openjdk.java.net/browse/JDK-8273324
@@ -221,16 +237,8 @@ class DynamicTableViewSkin<T> implements Skin<DynamicTableView<T>> {
     }
 
     @Override
-    public DynamicTableView<T> getSkinnable() {
-        return control;
-    }
-
-    @Override
-    public Node getNode() {
-        return tableView;
-    }
-
-    @Override
     public void dispose() {
+        super.dispose();
+        dataModel.rows.clear();
     }
 }

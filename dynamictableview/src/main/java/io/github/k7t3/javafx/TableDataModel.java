@@ -9,7 +9,7 @@ class TableDataModel<T> {
 
     ObjectProperty<SortedList<T>> sortedProperty = new SimpleObjectProperty<>();
 
-    SortedList<T> getSorted() {
+    private SortedList<T> getSorted() {
         return sortedProperty.get();
     }
 

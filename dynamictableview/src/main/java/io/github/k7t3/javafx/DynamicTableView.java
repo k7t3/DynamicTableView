@@ -5,6 +5,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
+import javafx.scene.AccessibleRole;
 import javafx.scene.Node;
 import javafx.scene.control.*;
 
@@ -16,6 +17,8 @@ import java.util.function.BiFunction;
  */
 public class DynamicTableView<T> extends Control {
 
+    private static final String DEFAULT_STYLE_CLASS = "dynamic-table-view";
+
     /**
      * 列の規定の幅(200d)を表します。
      */
@@ -23,6 +26,8 @@ public class DynamicTableView<T> extends Control {
 
     public DynamicTableView() {
         super();
+        getStyleClass().add(DEFAULT_STYLE_CLASS);
+        setAccessibleRole(AccessibleRole.TABLE_VIEW);
     }
 
     private final ObjectProperty<BiFunction<Integer, ReadOnlyDoubleProperty, DynamicTableCell<T>>> cellFactoryProperty
@@ -202,13 +207,33 @@ public class DynamicTableView<T> extends Control {
         return unmodifiableSelectedItems;
     }
 
+    /**
+     * 選択項目をクリアするためのアクション。内部テーブルの作成時に注入される。
+     */
+    Runnable clearSelectionAction;
+
+    /**
+     * 選択項目をクリアし、
+     * {@link DynamicTableView#getSelectedItem()}がnullを返すようになります。
+     */
+    public void clearSelection() {
+        if (clearSelectionAction == null)
+            return;
+        clearSelectionAction.run();
+    }
+
     @Override
     protected Skin<?> createDefaultSkin() {
         return new DynamicTableViewSkin<>(this);
     }
 
+    private String styleSheet;
+
     @Override
     public String getUserAgentStylesheet() {
-        return "/io/github/k7t3/javafx/dynamictableview.css";
+        if (styleSheet == null) {
+            styleSheet = getClass().getResource("dynamictableview.css").toExternalForm();
+        }
+        return styleSheet;
     }
 }

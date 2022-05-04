@@ -12,6 +12,8 @@ import javafx.scene.control.TableCell;
  */
 public abstract class DynamicTableCell<T> extends TableCell<TableDataRowModel<T>, T> {
 
+    private static final String DEFAULT_STYLE_CLASS = "dynamic-table-cell";
+
     /**
      * このセルが何列目に該当するかを示す列番号です。
      */
@@ -24,6 +26,7 @@ public abstract class DynamicTableCell<T> extends TableCell<TableDataRowModel<T>
 
     public DynamicTableCell(int index, ReadOnlyDoubleProperty cellSizeProperty) {
         super();
+        getStyleClass().add(DEFAULT_STYLE_CLASS);
         this.columnIndex = index;
         this.cellSizeProperty = cellSizeProperty;
         prefWidthProperty().bind(cellSizeProperty);
