@@ -22,7 +22,7 @@ OpenJFX 11以上で動作します。
 
 Maven Central Repository
 ```groovy
-implementation group: 'io.github.k7t3', name: 'DynamicTableView', version: '0.1.2'
+implementation group: 'io.github.k7t3', name: 'DynamicTableView', version: '0.1.3'
 ```
 
 DynamicTableViewコントロールの利用方法は以下の通り、要素を追加することで表示されます。
