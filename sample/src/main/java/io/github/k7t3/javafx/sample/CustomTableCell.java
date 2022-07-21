@@ -1,7 +1,6 @@
 package io.github.k7t3.javafx.sample;
 
 import io.github.k7t3.javafx.DynamicTableCell;
-import javafx.beans.property.ReadOnlyDoubleProperty;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.layout.BorderPane;
@@ -9,8 +8,8 @@ import javafx.scene.shape.Rectangle;
 
 public class CustomTableCell extends DynamicTableCell<Data> {
 
-    public CustomTableCell(int index, ReadOnlyDoubleProperty cellSizeProperty) {
-        super(index, cellSizeProperty);
+    public CustomTableCell() {
+        super();
     }
 
     private Label nameLabel;
@@ -21,8 +20,8 @@ public class CustomTableCell extends DynamicTableCell<Data> {
         BorderPane layout = new BorderPane();
         nameLabel = new Label();
         rectangle = new Rectangle();
-        rectangle.widthProperty().bind(cellSizeProperty.subtract(nameLabel.heightProperty()));
-        rectangle.heightProperty().bind(cellSizeProperty.subtract(nameLabel.heightProperty()));
+        rectangle.widthProperty().bind(cellSizeProperty().subtract(nameLabel.heightProperty()));
+        rectangle.heightProperty().bind(cellSizeProperty().subtract(nameLabel.heightProperty()));
         layout.setTop(nameLabel);
         layout.setCenter(rectangle);
         return layout;

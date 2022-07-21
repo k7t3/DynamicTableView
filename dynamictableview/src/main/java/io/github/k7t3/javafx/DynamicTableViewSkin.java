@@ -5,7 +5,6 @@ import javafx.beans.property.SimpleIntegerProperty;
 import javafx.collections.ListChangeListener;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
-import javafx.event.EventType;
 import javafx.scene.control.*;
 
 import java.util.List;
@@ -68,12 +67,6 @@ class DynamicTableViewSkin<T> extends SkinBase<DynamicTableView<T>> {
         };
 
         tableView.placeholderProperty().bind(control.placeHolderProperty());
-        tableView.addEventHandler(EventType.ROOT, event -> {
-            // TableView内で完結したイベントをDynamicTableViewコントロールへ移送する
-            if (event.isConsumed() && event.getSource() == tableView) {
-                control.fireEvent(event.copyFor(tableView, control));
-            }
-        });
 
         // 複数選択したセルをクリックして解除する時に発生するExceptionはOpenJFX18で修正されるらしい
         // https://bugs.openjdk.java.net/browse/JDK-8273324
@@ -129,7 +122,7 @@ class DynamicTableViewSkin<T> extends SkinBase<DynamicTableView<T>> {
             }
         });
 
-        control.columnWidthProperty().addListener((ob, o, n) -> {
+        control.cellSizeProperty().addListener((ob, o, n) -> {
             if (n != null && !o.equals(n)) {
                 updateColumnCount(control.getWidth());
                 tableView.refresh();
@@ -202,7 +195,7 @@ class DynamicTableViewSkin<T> extends SkinBase<DynamicTableView<T>> {
     private boolean columnCountChanged = false;
 
     private void updateColumnCount(double viewWidth) {
-        int columnCount = Math.max(1, (int)(viewWidth / control.getColumnWidth()));
+        int columnCount = Math.max(1, (int)(viewWidth / control.getCellSize()));
         columnCountProperty.set(columnCount);
     }
 
@@ -224,7 +217,7 @@ class DynamicTableViewSkin<T> extends SkinBase<DynamicTableView<T>> {
             for (int i = currentCount; i < count; i++) {
 
                 DynamicTableColumn<T> column = new DynamicTableColumn<>(control, i);
-                column.columnSizeProperty.bind(control.columnWidthProperty());
+                column.columnSizeProperty.bind(control.cellSizeProperty());
                 tableView.getColumns().add(column);
 
             }

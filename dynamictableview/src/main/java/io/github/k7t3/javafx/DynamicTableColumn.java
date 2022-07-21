@@ -1,16 +1,21 @@
 package io.github.k7t3.javafx;
 
-import javafx.beans.property.*;
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.scene.control.TableColumn;
 
-import java.util.function.BiFunction;
+import java.util.function.Supplier;
 
 class DynamicTableColumn<T> extends TableColumn<TableDataRowModel<T>, T> {
 
     protected final DynamicTableView<T> control;
 
-    int columnIndex;
+    final int columnIndex;
 
+    /**
+     * 列の幅を表すプロパティ。
+     * {@link DynamicTableView#cellSizeProperty()}とバインドされます。
+     */
     final DoubleProperty columnSizeProperty;
 
     DynamicTableColumn(DynamicTableView<T> control, int index) {
@@ -19,15 +24,25 @@ class DynamicTableColumn<T> extends TableColumn<TableDataRowModel<T>, T> {
         this.columnIndex = index;
         this.columnSizeProperty = new SimpleDoubleProperty();
 
-        if (control.getCellFactory() != null)
-            init(control.getCellFactory());
-        else
-            init(DefaultDynamicTableCell::new);
-    }
+        setCellValueFactory(new DynamicTableCellValueFactory<>());
 
-    private void init(BiFunction<Integer, ReadOnlyDoubleProperty, DynamicTableCell<T>> factory) {
-        this.setCellValueFactory(new DynamicTableCellValueFactory<>());
-        this.setCellFactory(column -> factory.apply(columnIndex, columnSizeProperty));
+        Supplier<DynamicTableCell<T>> factory;
+        if (control.getCellFactory() != null) {
+
+            factory = control.getCellFactory();
+
+        } else {
+
+            factory = DefaultDynamicTableCell::new;
+
+        }
+
+        setCellFactory(column -> {
+            var cell = factory.get();
+            cell.cellSizeWrapper().bind(columnSizeProperty);
+            return cell;
+        });
+
     }
 
 }

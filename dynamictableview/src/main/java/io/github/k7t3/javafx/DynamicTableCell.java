@@ -1,36 +1,47 @@
 package io.github.k7t3.javafx;
 
 import javafx.beans.property.ReadOnlyDoubleProperty;
+import javafx.beans.property.ReadOnlyDoubleWrapper;
 import javafx.scene.Node;
 import javafx.scene.control.TableCell;
 
 /**
  * <p>{@link DynamicTableView}に表示するセルクラスです。</p>
- * <p>内部変数に列インデックスを表す{@link DynamicTableCell#columnIndex},
- * 列の横幅を表す{@link DynamicTableCell#cellSizeProperty}があります。</p>
+ * <p>列の横幅を表す{@link DynamicTableCell#cellSizeProperty()}があります。</p>
  * @param <T> 表示するデータオブジェクト
  */
 public abstract class DynamicTableCell<T> extends TableCell<TableDataRowModel<T>, T> {
 
     private static final String DEFAULT_STYLE_CLASS = "dynamic-table-cell";
 
-    /**
-     * このセルが何列目に該当するかを示す列番号です。
-     */
-    protected final int columnIndex;
+    public DynamicTableCell() {
+        super();
+        getStyleClass().add(DEFAULT_STYLE_CLASS);
+    }
 
     /**
      * このセルの一辺のサイズを持つプロパティです。
      */
-    protected final ReadOnlyDoubleProperty cellSizeProperty;
+    private ReadOnlyDoubleWrapper cellSize;
 
-    public DynamicTableCell(int index, ReadOnlyDoubleProperty cellSizeProperty) {
-        super();
-        getStyleClass().add(DEFAULT_STYLE_CLASS);
-        this.columnIndex = index;
-        this.cellSizeProperty = cellSizeProperty;
-        prefWidthProperty().bind(cellSizeProperty);
-        prefHeightProperty().bind(cellSizeProperty);
+    public double getCellSize() {
+        if (cellSize == null) {
+            return 0d;
+        }
+        return cellSize.get();
+    }
+
+    ReadOnlyDoubleWrapper cellSizeWrapper() {
+        if (cellSize == null) {
+            cellSize = new ReadOnlyDoubleWrapper();
+            prefWidthProperty().bind(cellSize);
+            prefHeightProperty().bind(cellSize);
+        }
+        return cellSize;
+    }
+
+    public ReadOnlyDoubleProperty cellSizeProperty() {
+        return cellSizeWrapper().getReadOnlyProperty();
     }
 
     private Node view;

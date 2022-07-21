@@ -3,7 +3,8 @@ package io.github.k7t3.javafx.sample;
 import io.github.k7t3.javafx.DynamicTableView;
 import javafx.application.Application;
 import javafx.scene.Scene;
-import javafx.scene.layout.StackPane;
+import javafx.scene.control.*;
+import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 
@@ -21,7 +22,17 @@ public class SampleApp extends Application {
             tableView.getItems().add(new Data(name, color));
         }
 
-        StackPane root = new StackPane(tableView);
+        var top = new HBox(new Button(""));
+        var right = new VBox(new Button(""));
+        var bottom = new HBox(new Button(""));
+        var left = new VBox(new Button(""));
+
+        var root = new BorderPane(tableView);
+        root.setTop(top);
+        root.setRight(right);
+        root.setBottom(bottom);
+        root.setLeft(left);;
+
         primaryStage.setScene(new Scene(root, 850, 700));
         primaryStage.show();
     }

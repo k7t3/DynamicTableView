@@ -3,7 +3,6 @@ package io.github.k7t3.javafx.sample;
 import io.github.k7t3.javafx.DynamicTableCell;
 import io.github.k7t3.javafx.DynamicTableView;
 import javafx.application.Application;
-import javafx.beans.property.ReadOnlyDoubleProperty;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
@@ -74,8 +73,8 @@ public class ImageViewTestApp extends Application {
 
     private static class BaseballTeamCell extends DynamicTableCell<BaseballTeam> {
 
-        public BaseballTeamCell(int index, ReadOnlyDoubleProperty cellSizeProperty) {
-            super(index, cellSizeProperty);
+        public BaseballTeamCell() {
+            super();
         }
 
         private Label teamName;
@@ -86,7 +85,7 @@ public class ImageViewTestApp extends Application {
             teamName = new Label();
             teamImage = new ImageView();
             teamImage.setPreserveRatio(true);
-            teamImage.fitWidthProperty().bind(cellSizeProperty.multiply(0.8));
+            teamImage.fitWidthProperty().bind(cellSizeProperty().multiply(0.8));
 
             BorderPane layout = new BorderPane();
             layout.setTop(teamName);

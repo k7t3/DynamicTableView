@@ -9,7 +9,7 @@ import javafx.scene.AccessibleRole;
 import javafx.scene.Node;
 import javafx.scene.control.*;
 
-import java.util.function.BiFunction;
+import java.util.function.Supplier;
 
 /**
  * 横幅に応じて動的に列数を変更するテーブルコントロールです。
@@ -22,22 +22,23 @@ public class DynamicTableView<T> extends Control {
     /**
      * 列の規定の幅(200d)を表します。
      */
-    public static double DEFAULT_COLUMN_WIDTH = 200d;
+    public static double DEFAULT_CELL_SIZE = 200d;
 
     public DynamicTableView() {
         super();
         getStyleClass().add(DEFAULT_STYLE_CLASS);
         setAccessibleRole(AccessibleRole.TABLE_VIEW);
+        setFocusTraversable(true);
     }
 
-    private final ObjectProperty<BiFunction<Integer, ReadOnlyDoubleProperty, DynamicTableCell<T>>> cellFactoryProperty
+    private final ObjectProperty<Supplier<DynamicTableCell<T>>> cellFactoryProperty
             = new SimpleObjectProperty<>(null);
 
     /**
      * 現在定義されているセルファクトリを返します。
      * @return 現在定義されているセルファクトリ
      */
-    public BiFunction<Integer, ReadOnlyDoubleProperty, DynamicTableCell<T>> getCellFactory() {
+    public Supplier<DynamicTableCell<T>> getCellFactory() {
         return cellFactoryProperty().get();
     }
 
@@ -45,7 +46,7 @@ public class DynamicTableView<T> extends Control {
      * セルファクトリプロパティ。
      * @return セルファクトリプロパティ
      */
-    public ObjectProperty<BiFunction<Integer, ReadOnlyDoubleProperty, DynamicTableCell<T>>> cellFactoryProperty() {
+    public ObjectProperty<Supplier<DynamicTableCell<T>>> cellFactoryProperty() {
         return cellFactoryProperty;
     }
 
@@ -53,34 +54,34 @@ public class DynamicTableView<T> extends Control {
      * {@link DynamicTableCell}を継承したセルクラスを返すファクトリを割り当てます。
      * @param cellFactory {@link DynamicTableCell}を継承したクラスを生成するセルファクトリ。
      */
-    public void setCellFactory(BiFunction<Integer, ReadOnlyDoubleProperty, DynamicTableCell<T>> cellFactory) {
+    public void setCellFactory(Supplier<DynamicTableCell<T>> cellFactory) {
         this.cellFactoryProperty().set(cellFactory);
     }
 
-    private final DoubleProperty columnWidthProperty = new SimpleDoubleProperty(DEFAULT_COLUMN_WIDTH);
+    private final DoubleProperty cellSizeProperty = new SimpleDoubleProperty(DEFAULT_CELL_SIZE);
 
     /**
-     * テーブルの列の幅を返します。既定値は{@link DynamicTableView#DEFAULT_COLUMN_WIDTH}です。
+     * セルのサイズを返します。既定値は{@link DynamicTableView#DEFAULT_CELL_SIZE}です。
      * @return 列の幅
      */
-    public double getColumnWidth() {
-        return columnWidthProperty().get();
+    public double getCellSize() {
+        return cellSizeProperty().get();
     }
 
     /**
-     * 列の幅を持つプロパティ。既定値は{@link DynamicTableView#DEFAULT_COLUMN_WIDTH}
-     * @return 列の幅を持つプロパティ
+     * セルのサイズを持つプロパティ。既定値は{@link DynamicTableView#DEFAULT_CELL_SIZE}
+     * @return セルのサイズを持つプロパティ
      */
-    public DoubleProperty columnWidthProperty() {
-        return columnWidthProperty;
+    public DoubleProperty cellSizeProperty() {
+        return cellSizeProperty;
     }
 
     /**
-     * 列の幅を割り当てます。
+     * セルのサイズを割り当てます。
      * @param cellSize 列の幅
      */
-    public void setColumnWidth(double cellSize) {
-        this.columnWidthProperty().set(cellSize);
+    public void setCellSize(double cellSize) {
+        this.cellSizeProperty().set(cellSize);
     }
 
     private final ObjectProperty<Node> placeHolderProperty = new SimpleObjectProperty<>(new Label());

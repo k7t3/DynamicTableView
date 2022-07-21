@@ -16,7 +16,7 @@ class DynamicTableViewTest extends ApplicationTest {
     public void start(Stage stage) {
         System.out.println("テストアプリケーションスタート");
         table = new DynamicTableView<>();
-        table.setColumnWidth(100);
+        table.setCellSize(100);
         table.getItems().addAll("this is test word", "this is test word", "this is test word", "this is test word");
         stage.setScene(new Scene(new StackPane(table), 300, 400));
         stage.show();
