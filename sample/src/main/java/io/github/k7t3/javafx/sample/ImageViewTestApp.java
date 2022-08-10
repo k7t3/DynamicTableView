@@ -85,7 +85,7 @@ public class ImageViewTestApp extends Application {
             teamName = new Label();
             teamImage = new ImageView();
             teamImage.setPreserveRatio(true);
-            teamImage.fitWidthProperty().bind(cellSizeProperty().multiply(0.8));
+            teamImage.fitWidthProperty().bind(prefCellWidthProperty().multiply(0.8));
 
             BorderPane layout = new BorderPane();
             layout.setTop(teamName);

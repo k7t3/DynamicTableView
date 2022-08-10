@@ -7,7 +7,6 @@ import javafx.scene.control.TableCell;
 
 /**
  * <p>{@link DynamicTableView}に表示するセルクラスです。</p>
- * <p>列の横幅を表す{@link DynamicTableCell#cellSizeProperty()}があります。</p>
  * @param <T> 表示するデータオブジェクト
  */
 public abstract class DynamicTableCell<T> extends TableCell<TableDataRowModel<T>, T> {
@@ -19,29 +18,46 @@ public abstract class DynamicTableCell<T> extends TableCell<TableDataRowModel<T>
         getStyleClass().add(DEFAULT_STYLE_CLASS);
     }
 
-    /**
-     * このセルの一辺のサイズを持つプロパティです。
-     */
-    private ReadOnlyDoubleWrapper cellSize;
+    private ReadOnlyDoubleWrapper prefCellWidth;
 
-    public double getCellSize() {
-        if (cellSize == null) {
-            return 0d;
+    public double getPrefCellWidth() {
+        if (prefCellWidth == null) {
+            return USE_COMPUTED_SIZE;
         }
-        return cellSize.get();
+        return prefCellWidth.get();
+    }
+    
+    ReadOnlyDoubleWrapper prefCellWidthWrapper() {
+        if (prefCellWidth == null) {
+            prefCellWidth = new ReadOnlyDoubleWrapper(USE_COMPUTED_SIZE);
+            prefWidthProperty().bindBidirectional(prefCellWidth);
+        }
+        return prefCellWidth;
+    }
+    
+    public ReadOnlyDoubleProperty prefCellWidthProperty() {
+        return prefCellWidthWrapper().getReadOnlyProperty();
     }
 
-    ReadOnlyDoubleWrapper cellSizeWrapper() {
-        if (cellSize == null) {
-            cellSize = new ReadOnlyDoubleWrapper();
-            prefWidthProperty().bind(cellSize);
-            prefHeightProperty().bind(cellSize);
+    private ReadOnlyDoubleWrapper prefCellHeight;
+
+    public double getPrefCellHeight() {
+        if (prefCellHeight == null) {
+            return USE_COMPUTED_SIZE;
         }
-        return cellSize;
+        return prefCellHeight.get();
     }
 
-    public ReadOnlyDoubleProperty cellSizeProperty() {
-        return cellSizeWrapper().getReadOnlyProperty();
+    ReadOnlyDoubleWrapper prefCellHeightWrapper() {
+        if (prefCellHeight == null) {
+            prefCellHeight = new ReadOnlyDoubleWrapper(USE_COMPUTED_SIZE);
+            prefHeightProperty().bindBidirectional(prefCellHeight);
+        }
+        return prefCellHeight;
+    }
+
+    public ReadOnlyDoubleProperty prefCellHeightProperty() {
+        return prefCellHeightWrapper().getReadOnlyProperty();
     }
 
     private Node view;

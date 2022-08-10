@@ -2,12 +2,15 @@ package io.github.k7t3.javafx;
 
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.value.ChangeListener;
 import javafx.collections.ListChangeListener;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 import javafx.scene.control.*;
 
-import java.util.List;
+import java.util.Comparator;
+import java.util.function.Predicate;
+import java.util.stream.IntStream;
 
 class DynamicTableViewSkin<T> extends SkinBase<DynamicTableView<T>> {
 
@@ -15,9 +18,7 @@ class DynamicTableViewSkin<T> extends SkinBase<DynamicTableView<T>> {
 
     private final IntegerProperty columnCountProperty = new SimpleIntegerProperty();
 
-//    private final ReadOnlyIntegerWrapper selectedCountProperty = new ReadOnlyIntegerWrapper();
-
-    private final TableDataModel<T> dataModel = new TableDataModel<>();
+    private final TableDataModel<T> dataModel;
 
     private final TableView<TableDataRowModel<T>> tableView;
 
@@ -27,9 +28,14 @@ class DynamicTableViewSkin<T> extends SkinBase<DynamicTableView<T>> {
         super(control);
         this.control = getSkinnable();
         this.tableView = new TableView<>();
+        dataModel = new TableDataModel<>(columnCountProperty, control.sortedItemsProperty);
         init();
     }
 
+    /**
+     * コントロールで管理される項目が変更されたときのリスナ
+     * @param c 変更
+     */
     private void itemsChangeListener(ListChangeListener.Change<? extends T> c) {
         while (c.next()) {
             if (c.wasUpdated()) {
@@ -42,14 +48,29 @@ class DynamicTableViewSkin<T> extends SkinBase<DynamicTableView<T>> {
                 }
             } else {
                 if (c.wasAdded()) {
-                    if (!columnCountChanged) {
+
+                    if (!changingColumnCount) {
+
                         dataModel.normalizeRows();
+
+                        // 追加された要素を含む行を更新する
+                        var indices = IntStream.range(c.getFrom(), c.getTo()).boxed().toList();
+                        dataModel.updateRowContainsItem(indices);
+
                     }
+
                 } else if (c.wasRemoved()) {
-                    if (!columnCountChanged) {
+
+                    if (!changingColumnCount) {
+
                         dataModel.normalizeRows();
+
+                        dataModel.updateRowIndexAfter(c.getFrom());
+
                     }
-                    control.selectedItems.removeAll(c.getRemoved());
+
+                    // 選択リストに含まれていた場合は削除する
+                    control.getSelectionModel().selectedItems.removeAll(c.getRemoved());
                 }
             }
         }
@@ -58,14 +79,12 @@ class DynamicTableViewSkin<T> extends SkinBase<DynamicTableView<T>> {
     private void init() {
         LOGGER.log(System.Logger.Level.DEBUG, "init instance");
 
+        control.getSelectionModel().inject(tableView, dataModel);
+
+        tableView.setItems(dataModel.getRows());
         getChildren().add(tableView);
 
-        // 選択項目のクリアアクションを定義
-        control.clearSelectionAction = () -> {
-            tableView.getSelectionModel().clearSelection();
-            tableView.getFocusModel().focus(0, tableView.getVisibleLeafColumn(0));
-        };
-
+        // TableViewのPlaceHolderプロパティ
         tableView.placeholderProperty().bind(control.placeHolderProperty());
 
         // 複数選択したセルをクリックして解除する時に発生するExceptionはOpenJFX18で修正されるらしい
@@ -80,124 +99,71 @@ class DynamicTableViewSkin<T> extends SkinBase<DynamicTableView<T>> {
                 control.sortedItemsProperty.set(null);
             } else {
                 control.filteredItemsProperty.set(new FilteredList<>(n));
-                control.sortedItemsProperty.set(new SortedList<>(control.filteredItemsProperty.get()));
+                control.sortedItemsProperty.set(new SortedList<>(control.getFilteredItems()));
             }
         });
-        // Sortedリストが更新されたらときに各種実施する処理を書いたリスナを追加
+
+        // Sortedリストにリスナを追加
+        ChangeListener<? super Comparator<? super T>> comparatorListener = (ob, o, n) -> {
+            control.getSelectionModel().clearSelection();
+            tableView.refresh();
+        };
         control.sortedItemsProperty().addListener((ob, o, n) -> {
             if (o != null) {
-                // 監視リスナを削除
                 o.removeListener(this::itemsChangeListener);
             }
 
             if (n != null) {
-                // 監視リスナを追加
                 n.addListener(this::itemsChangeListener);
-                // Comparatorが更新されたときにTableViewをリフレッシュするリスナを追加
-                n.comparatorProperty().addListener((observable, oldValue, newValue) -> tableView.refresh());
+                n.comparatorProperty().addListener(comparatorListener);
             }
         });
-        // Sortedリストが更新されたらときに各種実施する処理を書いたリスナを追加
-        control.filteredItemsProperty().addListener((observable, oldValue, newValue) -> {
-            if (newValue != null) {
-                // Filter用Predicateが更新されたときにTableViewをリフレッシュする
-                newValue.predicateProperty().addListener((observable1, oldValue1, newValue1) -> {
-                    tableView.refresh();
-                });
-            }
-        });
-        // 初期Sortedリストに一覧更新用リスナを追加
         control.getSortedItems().addListener(this::itemsChangeListener);
-        // 初期SortedリストにComparatorが更新されたときにTableViewをリフレッシュするリスナを追加
-        control.getSortedItems().comparatorProperty().addListener((ob, o, n) -> tableView.refresh());
+        control.getSortedItems().comparatorProperty().addListener(comparatorListener);
 
-        dataModel.sortedProperty.bind(control.sortedItemsProperty());
-        dataModel.columnCountProperty.bind(columnCountProperty);
-        tableView.setItems(dataModel.rows);
+        // Filterリストにリスナを追加
+        ChangeListener<? super Predicate<? super T>> predicateListener = (ob, o, n) -> {
+            control.getSelectionModel().clearSelection();
+            tableView.refresh();
+        };
+        control.filteredItemsProperty().addListener((ob, o, n) -> {
+            if (o != null) {
+                o.predicateProperty().removeListener(predicateListener);
+            }
+
+            if (n != null) {
+                n.predicateProperty().addListener(predicateListener);
+            }
+        });
+        control.getFilteredItems().predicateProperty().addListener(predicateListener);
 
 
         control.widthProperty().addListener((p, o, n) -> {
             if (n != null && !o.equals(n)) {
-                updateColumnCount(n.doubleValue());
+                calculateColumnCount(n.doubleValue());
             }
         });
 
-        control.cellSizeProperty().addListener((ob, o, n) -> {
+        control.cellWidthProperty().addListener((ob, o, n) -> {
             if (n != null && !o.equals(n)) {
-                updateColumnCount(control.getWidth());
-                tableView.refresh();
+                calculateColumnCount(control.getWidth());
             }
         });
 
-        columnCountProperty.addListener((p, o, n) -> {
-            normalizeColumnCount();
-        });
-
-        // TableViewの選択しているアイテムをselectedItemsに流す
-        //noinspection rawtypes
-        tableView.getSelectionModel().getSelectedCells().addListener((ListChangeListener<? super TablePosition>) c -> {
-            while (c.next()) {
-                if (c.wasRemoved()) {
-
-                    List<? extends TablePosition> changed = c.getRemoved();
-
-                    for (int i = changed.size() - 1; -1 < i; i--) {
-                        TablePosition position = changed.get(i);
-                        int row = position.getRow();
-                        int column = position.getColumn();
-                        T picture = dataModel.get(row, column);
-                        if (picture != null) {
-                            control.selectedItems.remove(picture);
-                        }
-                    }
-                }
-                if (c.wasAdded()) {
-
-                    List<? extends TablePosition> list = c.getAddedSubList();
-
-                    for (int i = list.size() - 1; -1 < i; i--) {
-                        TablePosition position = list.get(i);
-                        int row = position.getRow();
-                        int column = position.getColumn();
-                        T picture = dataModel.get(row, column);
-                        if (picture != null) {
-                            control.selectedItems.add(picture);
-                        }
-                    }
-
-                }
-            }
-        });
-
-        // selectedItemsのうち、最新の選択アイテムをselectedにセットする
-        control.selectedItems.addListener((ListChangeListener<? super T>) c -> {
-            while (c.next()) {
-                if (c.wasRemoved()) {
-                    List<? extends T> list = c.getList();
-                    if (list.isEmpty()) {
-                        control.selectedItemProperty.set(null);
-                    } else {
-                        T picture = list.get(list.size() - 1);
-                        control.selectedItemProperty.set(picture);
-                    }
-
-                }
-                if (c.wasAdded()) {
-                    List<? extends T> list = c.getAddedSubList();
-                    T picture = list.get(list.size() - 1);
-                    control.selectedItemProperty.set(picture);
-
-                }
-            }
-        });
+        // 列数プロパティが変更されたら画面の列数を最適化
+        columnCountProperty.addListener((p, o, n) -> normalizeColumnCount());
     }
 
-    private boolean columnCountChanged = false;
-
-    private void updateColumnCount(double viewWidth) {
-        int columnCount = Math.max(1, (int)(viewWidth / control.getCellSize()));
+    /**
+     * 現在の画面サイズとセルのサイズを考慮して列数を更新する。
+     * @param viewWidth 画面サイズ
+     */
+    private void calculateColumnCount(double viewWidth) {
+        int columnCount = Math.max(1, (int)(viewWidth / control.getCellWidth()));
         columnCountProperty.set(columnCount);
     }
+
+    private boolean changingColumnCount = false;
 
     private void normalizeColumnCount() {
         int currentCount = tableView.getColumns().size();
@@ -205,8 +171,8 @@ class DynamicTableViewSkin<T> extends SkinBase<DynamicTableView<T>> {
 
         if (currentCount == count) return;
 
-        columnCountChanged = true;
-        tableView.getSelectionModel().clearSelection();
+        changingColumnCount = true;
+        control.getSelectionModel().clearSelection();
 
         if (count < currentCount) {
             for (int i = 0; i < currentCount - count; i++) {
@@ -217,21 +183,25 @@ class DynamicTableViewSkin<T> extends SkinBase<DynamicTableView<T>> {
             for (int i = currentCount; i < count; i++) {
 
                 DynamicTableColumn<T> column = new DynamicTableColumn<>(control, i);
-                column.columnSizeProperty.bind(control.cellSizeProperty());
                 tableView.getColumns().add(column);
 
             }
 
         }
 
+        // 列数の変更に伴って行数も更新する
         dataModel.normalizeRows();
 
-        columnCountChanged = false;
+        // すべての行を更新する
+        dataModel.getRows().forEach(TableDataRowModel::update);
+
+        changingColumnCount = false;
     }
 
     @Override
     public void dispose() {
         super.dispose();
-        dataModel.rows.clear();
+        dataModel.getRows().forEach(TableDataRowModel::clear);
+        dataModel.getRows().clear();
     }
 }

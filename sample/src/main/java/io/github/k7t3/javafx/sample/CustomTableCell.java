@@ -20,8 +20,8 @@ public class CustomTableCell extends DynamicTableCell<Data> {
         BorderPane layout = new BorderPane();
         nameLabel = new Label();
         rectangle = new Rectangle();
-        rectangle.widthProperty().bind(cellSizeProperty().subtract(nameLabel.heightProperty()));
-        rectangle.heightProperty().bind(cellSizeProperty().subtract(nameLabel.heightProperty()));
+        rectangle.widthProperty().bind(prefCellWidthProperty().subtract(nameLabel.heightProperty()));
+        rectangle.heightProperty().bind(prefCellHeightProperty().subtract(nameLabel.heightProperty()));
         layout.setTop(nameLabel);
         layout.setCenter(rectangle);
         return layout;

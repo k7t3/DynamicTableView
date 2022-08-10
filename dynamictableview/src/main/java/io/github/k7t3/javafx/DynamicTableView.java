@@ -5,14 +5,16 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
-import javafx.scene.AccessibleRole;
 import javafx.scene.Node;
-import javafx.scene.control.*;
+import javafx.scene.control.Control;
+import javafx.scene.control.Label;
+import javafx.scene.control.Skin;
+import javafx.scene.control.TableView;
 
 import java.util.function.Supplier;
 
 /**
- * 横幅に応じて動的に列数を変更するテーブルコントロールです。
+ * 横幅に応じて動的に列数を変更するテーブルコントロール。
  * @param <T> 取り扱うデータタイプ
  */
 public class DynamicTableView<T> extends Control {
@@ -20,22 +22,33 @@ public class DynamicTableView<T> extends Control {
     private static final String DEFAULT_STYLE_CLASS = "dynamic-table-view";
 
     /**
-     * 列の規定の幅(200d)を表します。
+     * 既定のセルの横幅
      */
-    public static double DEFAULT_CELL_SIZE = 200d;
+    private static final double DEFAULT_CELL_WIDTH = 200.0;
 
+    /**
+     * 既定のセルの高さ
+     */
+    private static final double DEFAULT_CELL_HEIGHT = USE_COMPUTED_SIZE;
+
+    /**
+     * 既定のPlaceHolder
+     */
+    private static final Label DEFAULT_PLACE_HOLDER = new Label();
+
+    /**
+     * コンストラクタ
+     */
     public DynamicTableView() {
         super();
         getStyleClass().add(DEFAULT_STYLE_CLASS);
-        setAccessibleRole(AccessibleRole.TABLE_VIEW);
-        setFocusTraversable(true);
     }
 
-    private final ObjectProperty<Supplier<DynamicTableCell<T>>> cellFactoryProperty
+    private final ObjectProperty<Supplier<DynamicTableCell<T>>> cellFactory
             = new SimpleObjectProperty<>(null);
 
     /**
-     * 現在定義されているセルファクトリを返します。
+     * 現在定義されているセルファクトリを返す。
      * @return 現在定義されているセルファクトリ
      */
     public Supplier<DynamicTableCell<T>> getCellFactory() {
@@ -47,75 +60,120 @@ public class DynamicTableView<T> extends Control {
      * @return セルファクトリプロパティ
      */
     public ObjectProperty<Supplier<DynamicTableCell<T>>> cellFactoryProperty() {
-        return cellFactoryProperty;
+        return cellFactory;
     }
 
     /**
-     * {@link DynamicTableCell}を継承したセルクラスを返すファクトリを割り当てます。
+     * {@link DynamicTableCell}を継承したセルクラスを返すファクトリを割り当てる。
      * @param cellFactory {@link DynamicTableCell}を継承したクラスを生成するセルファクトリ。
      */
     public void setCellFactory(Supplier<DynamicTableCell<T>> cellFactory) {
-        this.cellFactoryProperty().set(cellFactory);
+        cellFactoryProperty().set(cellFactory);
     }
 
-    private final DoubleProperty cellSizeProperty = new SimpleDoubleProperty(DEFAULT_CELL_SIZE);
+    private DoubleProperty cellWidth;
 
     /**
-     * セルのサイズを返します。既定値は{@link DynamicTableView#DEFAULT_CELL_SIZE}です。
-     * @return 列の幅
+     * 現在割り当てられているセルの幅を返すメソッド。
+     * @return セルの幅
      */
-    public double getCellSize() {
-        return cellSizeProperty().get();
+    public double getCellWidth() {
+        if (cellWidth == null) {
+            return DEFAULT_CELL_WIDTH;
+        }
+        return cellWidth.get();
     }
 
     /**
-     * セルのサイズを持つプロパティ。既定値は{@link DynamicTableView#DEFAULT_CELL_SIZE}
-     * @return セルのサイズを持つプロパティ
+     * 割り当てられているセルの幅を表すプロパティ
+     * @return セルの幅を表すプロパティ
      */
-    public DoubleProperty cellSizeProperty() {
-        return cellSizeProperty;
+    public DoubleProperty cellWidthProperty() {
+        if (cellWidth == null) {
+            cellWidth = new SimpleDoubleProperty(DEFAULT_CELL_WIDTH);
+        }
+        return cellWidth;
     }
 
     /**
-     * セルのサイズを割り当てます。
-     * @param cellSize 列の幅
+     * セルの幅を割り当てるメソッド。
+     * @param cellWidth セルの幅
      */
-    public void setCellSize(double cellSize) {
-        this.cellSizeProperty().set(cellSize);
+    public void setCellWidth(double cellWidth) {
+        cellWidthProperty().set(cellWidth);
     }
 
-    private final ObjectProperty<Node> placeHolderProperty = new SimpleObjectProperty<>(new Label());
+    private DoubleProperty cellHeight;
 
     /**
-     * {@link DynamicTableView#getItems()}が一つも要素を持たないときに表示する{@link Node}を返します。
-     * 既定値は{@link TableView}に基づきます。
+     * セルの高さを返すメソッド。
+     * 既定では{@link javafx.scene.layout.Region#USE_COMPUTED_SIZE}を返す。
+     * @return セルの高さ
+     */
+    public double getCellHeight() {
+        if (cellHeight == null) {
+            return DEFAULT_CELL_HEIGHT;
+        }
+        return cellHeight.get();
+    }
+
+    /**
+     * 割り当てられるセルの高さを表すプロパティ。
+     * @return セルの高さを表すプロパティ
+     */
+    public DoubleProperty cellHeightProperty() {
+        if (cellHeight == null) {
+            cellHeight = new SimpleDoubleProperty(DEFAULT_CELL_HEIGHT);
+        }
+        return cellHeight;
+    }
+
+    /**
+     * セルの高さを割り当てるメソッド。
+     * @param cellHeight セルの高さ
+     */
+    public void setCellHeight(double cellHeight) {
+        cellHeightProperty().set(cellHeight);
+    }
+
+    private ObjectProperty<Node> placeHolder;
+
+    /**
+     * {@link DynamicTableView#getItems()}が一つも要素を持たないときに表示する{@link Node}を返す。
+     * 規定値は空の{@link Label}インスタンスが割り当てられる。
      * @return 要素が一つもないことを示すNode。
      */
     public Node getPlaceHolder() {
+        if (placeHolder == null) {
+            return DEFAULT_PLACE_HOLDER;
+        }
         return placeHolderProperty().get();
     }
 
     /**
      * {@link DynamicTableView#getItems()}が一つも要素を持たないときに表示する{@link Node}を
-     * 持つプロパティを返します。既定値は{@link TableView}に基づきます。
+     * 持つプロパティを返す。既定値は空の{@link Label}インスタンスが割り当てられる。
      * @return 要素が一つもないことを示すNodeプロパティ。
      */
     public ObjectProperty<Node> placeHolderProperty() {
-        return placeHolderProperty;
+        if (placeHolder == null) {
+            placeHolder = new SimpleObjectProperty<>(DEFAULT_PLACE_HOLDER);
+        }
+        return placeHolder;
     }
 
     /**
-     * {@link DynamicTableView#getItems()}が一つも要素を持たないときに表示する{@link Node}を割り当てます。
+     * {@link DynamicTableView#getItems()}が一つも要素を持たないときに表示する{@link Node}を割り当てる。
      * @param placeHolder 要素が一つもないことを示すNode。
      */
     public void setPlaceHolder(Node placeHolder) {
-        this.placeHolderProperty().set(placeHolder);
+        placeHolderProperty().set(placeHolder);
     }
 
     private final ObjectProperty<ObservableList<T>> itemsProperty = new SimpleObjectProperty<>(FXCollections.observableArrayList());
 
     /**
-     * 表示する要素リストを返します。
+     * 表示する要素リストを返す。
      * @return 表示する要素リスト
      */
     public ObservableList<T> getItems() {
@@ -131,18 +189,17 @@ public class DynamicTableView<T> extends Control {
     }
 
     /**
-     * 表示する要素リストを割り当てます。
+     * 表示する要素リストを割り当てる。
      * @param items 表示する要素リスト
      */
     public void setItems(ObservableList<T> items) {
         itemsProperty().set(items);
     }
 
-    // これ内部に持つ必要ある？外からsetItemsでFilterなりSortedなり適用したリスト当てはめればいいんじゃ？
     final ReadOnlyObjectWrapper<FilteredList<T>> filteredItemsProperty = new ReadOnlyObjectWrapper<>(new FilteredList<>(itemsProperty.get()));
 
     /**
-     * {@link DynamicTableView#getItems()}をラップしたリストを返します。
+     * {@link DynamicTableView#getItems()}をラップした{@link FilteredList}を返す。
      * @return {@link DynamicTableView#getItems()}をラップしたリスト
      */
     public FilteredList<T> getFilteredItems() {
@@ -150,77 +207,54 @@ public class DynamicTableView<T> extends Control {
     }
 
     /**
-     * {@link DynamicTableView#getItems()}をラップしたリストプロパティを返します。
+     * {@link DynamicTableView#getItems()}をラップした{@link FilteredList}プロパティを返す。
      * @return {@link DynamicTableView#getItems()}をラップしたリストプロパティ
      */
     public ReadOnlyObjectProperty<FilteredList<T>> filteredItemsProperty() {
         return filteredItemsProperty.getReadOnlyProperty();
     }
 
-    // これ内部に持つ必要ある？外からsetItemsでFilterなりSortedなり適用したリスト当てはめればいいんじゃ？
     final ReadOnlyObjectWrapper<SortedList<T>> sortedItemsProperty = new ReadOnlyObjectWrapper<>(new SortedList<>(filteredItemsProperty.get()));
 
     /**
-     * {@link DynamicTableView#getItems()}をラップしたリストを返します。
-     * @return {@link DynamicTableView#getItems()}をラップしたリスト
+     * {@link DynamicTableView#getFilteredItems()} ()}をラップした{@link SortedList}を返す。
+     * @return {@link DynamicTableView#getFilteredItems()} ()}をラップしたリスト
      */
     public SortedList<T> getSortedItems() {
         return sortedItemsProperty().get();
     }
 
     /**
-     * {@link DynamicTableView#getItems()}をラップしたリストプロパティを返します。
+     * {@link DynamicTableView#getFilteredItems()} ()}をラップした{@link SortedList}プロパティを返します。
      * @return {@link DynamicTableView#getItems()}をラップしたリストプロパティ
      */
     public ReadOnlyObjectProperty<SortedList<T>> sortedItemsProperty() {
         return sortedItemsProperty.getReadOnlyProperty();
     }
 
-    final ReadOnlyObjectWrapper<T> selectedItemProperty = new ReadOnlyObjectWrapper<>();
+    private ReadOnlyObjectWrapper<DynamicTableViewSelectionModel<T>> selectionModel;
 
-    /**
-     * 選択しているアイテムを返します。複数のアイテムを選択しているときは
-     * 最後に選択されたアイテムが返されます。
-     * @return 最後に選択されたアイテム
-     */
-    public T getSelectedItem() {
-        return selectedItemProperty().get();
+    ReadOnlyObjectWrapper<DynamicTableViewSelectionModel<T>> selectionModelWrapper() {
+        if (selectionModel == null) {
+            selectionModel = new ReadOnlyObjectWrapper<>(new DynamicTableViewSelectionModel<>());
+        }
+        return selectionModel;
     }
 
     /**
-     * 選択しているアイテムのプロパティを返す。複数のアイテムを選択しているときは
-     * 最後に選択されたアイテムが返されます。
-     * @return 選択しているアイテムのプロパティ
+     * このテーブルの{@link javafx.scene.control.MultipleSelectionModel}の実装を返す。
+     * @return SelectionModel
      */
-    public ReadOnlyObjectProperty<T> selectedItemProperty() {
-        return selectedItemProperty.getReadOnlyProperty();
-    }
-
-    final ObservableList<T> selectedItems = FXCollections.observableArrayList();
-
-    private final ObservableList<T> unmodifiableSelectedItems = FXCollections.unmodifiableObservableList(selectedItems);
-
-    /**
-     * 選択しているアイテムのリストを返します。
-     * @return 選択しているアイテムのリスト
-     */
-    public ObservableList<T> getUnmodifiableSelectedItems() {
-        return unmodifiableSelectedItems;
+    public DynamicTableViewSelectionModel<T> getSelectionModel() {
+        return selectionModelWrapper().get();
     }
 
     /**
-     * 選択項目をクリアするためのアクション。内部テーブルの作成時に注入される。
+     * {@link javafx.scene.control.MultipleSelectionModel}の実装を表すプロパティ。
+     * @return SelectionModelプロパティ
      */
-    Runnable clearSelectionAction;
-
-    /**
-     * 選択項目をクリアし、
-     * {@link DynamicTableView#getSelectedItem()}がnullを返すようになります。
-     */
-    public void clearSelection() {
-        if (clearSelectionAction == null)
-            return;
-        clearSelectionAction.run();
+    public ReadOnlyObjectProperty<DynamicTableViewSelectionModel<T>> selectionModelProperty() {
+        return selectionModelWrapper().getReadOnlyProperty();
     }
 
     @Override

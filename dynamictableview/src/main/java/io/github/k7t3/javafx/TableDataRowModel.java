@@ -17,7 +17,11 @@ class TableDataRowModel<T> {
         this.model = model;
     }
 
-    public T get(int columnIndex) {
+    public int getRowIndex() {
+        return rowIndex;
+    }
+
+    private T get(int columnIndex) {
         return model.get(rowIndex, columnIndex);
     }
 
@@ -32,6 +36,11 @@ class TableDataRowModel<T> {
     void update() {
         // プロパティの値を更新
         properties.forEach((key, value) -> value.set(get(key)));
+    }
+
+    public void clear() {
+        properties.values().forEach(p -> p.setValue(null));
+        properties.clear();
     }
 
 }
