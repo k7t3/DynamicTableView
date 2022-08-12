@@ -9,7 +9,6 @@ import javafx.scene.Node;
 import javafx.scene.control.Control;
 import javafx.scene.control.Label;
 import javafx.scene.control.Skin;
-import javafx.scene.control.TableView;
 
 import java.util.function.Supplier;
 

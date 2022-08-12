@@ -22,7 +22,7 @@ OpenJFX 11以上で動作します。
 
 Maven Central Repository
 ```groovy
-implementation group: 'io.github.k7t3', name: 'DynamicTableView', version: '0.1.3'
+implementation group: 'io.github.k7t3', name: 'DynamicTableView', version: 'X.X.X'
 ```
 
 DynamicTableViewコントロールの利用方法は以下の通り、要素を追加することで表示されます。
@@ -41,16 +41,16 @@ tableView.getItems().addAll(
 );
 ```
 
-<img width="540" alt="default" src="https://user-images.githubusercontent.com/33083609/150999642-fc40f4ac-0e01-446b-804f-0787e31230e4.png">
+<img width="540" alt="default" src="https://user-images.githubusercontent.com/33083609/184387411-1d7def9e-efe4-4c1e-94fb-41f30ec956f6.png">
 
 
 
-DynamicTableViewに任意のNodeを表示させるには、まずDynamicTableCellを継承したクラスを作成します。
+DynamicTableViewに任意のNodeを表示させるには、DynamicTableCellを継承したクラスを作成します。
 ```java
 class BaseballTeamCell extends DynamicTableCell<BaseballTeam> {
 
-    public BaseballTeamCell(int index, ReadOnlyDoubleProperty cellSizeProperty) {
-        super(index, cellSizeProperty);
+    public BaseballTeamCell() {
+        super();
     }
 
     private Label teamName;
@@ -61,7 +61,8 @@ class BaseballTeamCell extends DynamicTableCell<BaseballTeam> {
         teamName = new Label();
         teamImage = new ImageView();
         teamImage.setPreserveRatio(true);
-        teamImage.fitWidthProperty().bind(cellSizeProperty.multiply(0.8));
+        teamImage.fitWidthProperty().bind(prefCellWidthProperty().multiply(0.8));
+        teamImage.fitHeightProperty().bind(prefCellHeightProperty().multiply(0.8));
 
         BorderPane layout = new BorderPane();
         layout.setTop(teamName);
@@ -82,10 +83,12 @@ class BaseballTeamCell extends DynamicTableCell<BaseballTeam> {
 DynamicTableView<BaseballTeam> tableView = new DynamicTableView<>();
 // セルファクトリを指定
 tableView.setCellFactory(BaseballTeamCell::new);
+tableView.setCellWidth(200);
+tableView.setCellHeight(200);
 tableView.getItems().addAll(getAllProfessionalTeams());
 ```
 
-<img width="734" alt="images" src="https://user-images.githubusercontent.com/33083609/150999523-130f450c-453a-42a8-924f-6fc1e6afbc46.png">
+<img width="734" alt="images" src="https://user-images.githubusercontent.com/33083609/184388039-d9cee87b-4921-4bbd-9949-177b100a8b67.png">
 
 
 

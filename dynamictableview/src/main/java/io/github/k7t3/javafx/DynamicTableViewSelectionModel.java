@@ -16,8 +16,10 @@ import java.util.List;
 public class DynamicTableViewSelectionModel<T> extends MultipleSelectionModel<T> {
 
     final ObservableList<T> selectedItems = FXCollections.observableArrayList();
+    private final ObservableList<T> readOnlySelectedItems = FXCollections.unmodifiableObservableList(selectedItems);
 
     final ObservableList<Integer> selectedIndices = FXCollections.observableArrayList();
+    private final ObservableList<Integer> readOnlySelectedIndices = FXCollections.unmodifiableObservableList(selectedIndices);
 
     public DynamicTableViewSelectionModel() {
     }
@@ -59,15 +61,17 @@ public class DynamicTableViewSelectionModel<T> extends MultipleSelectionModel<T>
                     if (item != null) {
                         selectedItems.remove(item);
 
-                        Integer value = row * dataModel.getColumnCount() + column;
-                        selectedIndices.remove(value);
+                        Integer index = row * dataModel.getColumnCount() + column;
+                        selectedIndices.remove(index);
                     }
                 }
 
                 if (selectedItems.isEmpty()) {
                     setSelectedItem(null);
+                    setSelectedIndex(-1);
                 } else {
                     setSelectedItem(selectedItems.get(selectedItems.size() - 1));
+                    setSelectedIndex(selectedIndices.get(selectedIndices.size() - 1));
                 }
             }
             if (c.wasAdded()) {
@@ -75,21 +79,20 @@ public class DynamicTableViewSelectionModel<T> extends MultipleSelectionModel<T>
                 // 選択されたセルのリスト
                 List<? extends TablePosition> list = c.getAddedSubList();
 
-                T lastItem = null;
                 for (TablePosition pos : list) {
                     var row = pos.getRow();
                     var column = pos.getColumn();
 
                     var item = dataModel.get(row, column);
+                    var index = row * dataModel.getColumnCount() + column;
+
                     if (item != null) {
                         selectedItems.add(item);
-                        selectedIndices.add(row * dataModel.getColumnCount() + column);
-                        lastItem = item;
-                    }
-                }
+                        selectedIndices.add(index);
 
-                if (lastItem != null) {
-                    setSelectedItem(lastItem);
+                        setSelectedItem(item);
+                        setSelectedIndex(index);
+                    }
                 }
 
             }
@@ -98,25 +101,27 @@ public class DynamicTableViewSelectionModel<T> extends MultipleSelectionModel<T>
 
     @Override
     public ObservableList<Integer> getSelectedIndices() {
-        return FXCollections.unmodifiableObservableList(selectedIndices);
+        return readOnlySelectedIndices;
     }
 
     @Override
     public ObservableList<T> getSelectedItems() {
-        return FXCollections.unmodifiableObservableList(selectedItems);
+        return readOnlySelectedItems;
     }
 
     private int row, column;
 
     private void indexToRowColumn(int itemIndex) {
         var columnCount = dataModel.getColumnCount();
-        var div = itemIndex / columnCount;
-        row = (columnCount < 1) ? 0 : (itemIndex % columnCount == 0) ? div + 1 : div;
+        row = itemIndex / columnCount;
         column = itemIndex - (row * columnCount);
     }
 
     private void itemToRowColumn(T item) {
         var index = items.indexOf(item);
+        if (index < 0) {
+            throw new IllegalArgumentException();
+        }
         indexToRowColumn(index);
     }
 
@@ -213,9 +218,9 @@ public class DynamicTableViewSelectionModel<T> extends MultipleSelectionModel<T>
     @Override
     public boolean isEmpty() {
         if (!isInitialized) {
-            return false;
+            return true;
         }
-        return selectionModel.isEmpty();
+        return selectedItems.isEmpty() && selectedIndices.isEmpty();
     }
 
     @Override
@@ -224,36 +229,12 @@ public class DynamicTableViewSelectionModel<T> extends MultipleSelectionModel<T>
             return;
         }
 
-        var cells = selectionModel.getSelectedCells();
-        if (cells.isEmpty()) {
-            if (items.isEmpty()) {
-                return;
-            }
-
-            select(0);
+        var itemIndex = getSelectedIndex();
+        if (itemIndex < 1) {
             return;
         }
 
-        // 最後に選択されたセルを取得
-        var last = cells.get(cells.size() - 1);
-
-        // 先頭のセルの場合
-        if (last.getColumn() == 0) {
-
-            // 上の行が存在する場合
-            if (0 < last.getRow()) {
-
-                // 上の行の末尾を選択
-                selectionModel.select(last.getRow() - 1, getColumn(dataModel.getColumnCount() - 1));
-
-            }
-
-        } else {
-
-            // 一つ左のセルを選択
-            selectionModel.select(last.getRow(), getColumn(last.getColumn() - 1));
-
-        }
+        select(itemIndex - 1);
     }
 
     @Override
@@ -262,35 +243,13 @@ public class DynamicTableViewSelectionModel<T> extends MultipleSelectionModel<T>
             return;
         }
 
-        var cells = selectionModel.getSelectedCells();
-        if (cells.isEmpty()) {
-            if (items.isEmpty()) {
-                return;
-            }
-
-            select(0);
+        if (items.isEmpty()) {
             return;
         }
 
-        // 最後に選択されたセルを取得
-        var last = cells.get(cells.size() - 1);
-
-        // 最後のセルの場合
-        if (last.getColumn() == (dataModel.getColumnCount() - 1)) {
-
-            // 下の行が存在する場合
-            if (last.getRow() < (dataModel.getRowCount() - 1)) {
-
-                // 下の行の先頭を選択
-                selectionModel.select(last.getRow() + 1, getColumn(0));
-
-            }
-
-        } else {
-
-            // 一つ右のセルを選択
-            selectionModel.select(last.getRow(), getColumn(last.getColumn() + 1));
-
+        var itemIndex = getSelectedIndex();
+        if (itemIndex + 1 < items.size()) {
+            select(itemIndex + 1);
         }
     }
 

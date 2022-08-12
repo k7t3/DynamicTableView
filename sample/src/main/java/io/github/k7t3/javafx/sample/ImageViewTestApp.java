@@ -3,6 +3,7 @@ package io.github.k7t3.javafx.sample;
 import io.github.k7t3.javafx.DynamicTableCell;
 import io.github.k7t3.javafx.DynamicTableView;
 import javafx.application.Application;
+import javafx.collections.ListChangeListener;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
@@ -16,15 +17,30 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class ImageViewTestApp extends Application {
     @Override
     public void start(Stage primaryStage) throws Exception {
         DynamicTableView<BaseballTeam> tableView = new DynamicTableView<>();
+        tableView.setCellWidth(200);
+        tableView.setCellHeight(200);
         tableView.setCellFactory(BaseballTeamCell::new);
         tableView.getItems().addAll(getAllProfessionalTeams());
 
-        primaryStage.setScene(new Scene(new StackPane(tableView)));
+        tableView.getSelectionModel().getSelectedItems().addListener((ListChangeListener<? super BaseballTeam>) c -> {
+            while (c.next()) {
+                if (!c.getList().isEmpty()) {
+                    System.out.println("================================================================================");
+                    System.out.println(c.getList().stream().map(BaseballTeam::getName).collect(Collectors.toList()));
+                }
+            }
+        });
+
+        tableView.setOnKeyPressed(e -> System.out.println(e.getCode()));
+        tableView.setOnMousePressed(e -> System.out.println(e.getButton()));
+
+        primaryStage.setScene(new Scene(new StackPane(tableView), 650, 400));
         primaryStage.show();
     }
 
@@ -86,6 +102,7 @@ public class ImageViewTestApp extends Application {
             teamImage = new ImageView();
             teamImage.setPreserveRatio(true);
             teamImage.fitWidthProperty().bind(prefCellWidthProperty().multiply(0.8));
+            teamImage.fitHeightProperty().bind(prefCellHeightProperty().multiply(0.8));
 
             BorderPane layout = new BorderPane();
             layout.setTop(teamName);

@@ -6,10 +6,10 @@ import javafx.scene.Scene;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 
-public class DefaultSampleApp extends Application {
-
+public class DefaultLabelApp extends Application {
     @Override
     public void start(Stage primaryStage) throws Exception {
+
         DynamicTableView<String> tableView = new DynamicTableView<>();
         tableView.getItems().addAll(
                 "apple",
@@ -23,9 +23,9 @@ public class DefaultSampleApp extends Application {
                 "pineapple"
         );
 
-        Scene scene = new Scene(new StackPane(tableView));
+        var scene = new Scene(new StackPane(tableView), 500, 400);
         primaryStage.setScene(scene);
         primaryStage.show();
-    }
 
+    }
 }

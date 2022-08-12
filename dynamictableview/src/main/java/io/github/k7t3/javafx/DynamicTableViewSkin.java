@@ -10,6 +10,7 @@ import javafx.scene.control.*;
 
 import java.util.Comparator;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 class DynamicTableViewSkin<T> extends SkinBase<DynamicTableView<T>> {
@@ -54,7 +55,7 @@ class DynamicTableViewSkin<T> extends SkinBase<DynamicTableView<T>> {
                         dataModel.normalizeRows();
 
                         // 追加された要素を含む行を更新する
-                        var indices = IntStream.range(c.getFrom(), c.getTo()).boxed().toList();
+                        var indices = IntStream.range(c.getFrom(), c.getTo()).boxed().collect(Collectors.toList());
                         dataModel.updateRowContainsItem(indices);
 
                     }
