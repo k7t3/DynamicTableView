@@ -200,10 +200,11 @@ public class DynamicTableViewSelectionModel<T> extends MultipleSelectionModel<T>
         if (!isInitialized) {
             return;
         }
-        selectionModel.clearSelection();
-        // セルがクリアされてから呼ばれることがあるから手動でクリア
+
         selectedItems.clear();
         selectedIndices.clear();
+
+        selectionModel.clearSelection();
     }
 
     @Override
