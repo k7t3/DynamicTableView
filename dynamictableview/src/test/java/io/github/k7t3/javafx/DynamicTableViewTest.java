@@ -81,4 +81,20 @@ class DynamicTableViewTest extends ApplicationTest {
 
         System.out.println("done");
     }
+
+    @Test
+    public void testCleared() {
+        var selectionModel = table.getSelectionModel();
+
+        var items = List.of("item");
+        table.getItems().setAll(items);
+
+        selectionModel.select(0);
+
+        assertEquals("item", selectionModel.getSelectedItem());
+
+        table.getItems().clear();
+
+        assertTrue(selectionModel.isEmpty());
+    }
 }

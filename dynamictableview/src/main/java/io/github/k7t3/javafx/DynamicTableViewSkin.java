@@ -40,10 +40,12 @@ class DynamicTableViewSkin<T> extends SkinBase<DynamicTableView<T>> {
     private void itemsChangeListener(ListChangeListener.Change<? extends T> c) {
         while (c.next()) {
             if (c.wasUpdated()) {
+                //noinspection StatementWithEmptyBody
                 for (int i = c.getFrom(); i < c.getTo(); i++) {
                     // TODO updated
                 }
             } else if (c.wasPermutated()) {
+                //noinspection StatementWithEmptyBody
                 for (int i = c.getFrom(); i < c.getTo(); i++) {
                     // TODO permutated
                 }
@@ -95,6 +97,7 @@ class DynamicTableViewSkin<T> extends SkinBase<DynamicTableView<T>> {
 
         // アイテムリストが更新されたらFilterとSortedも更新するリスナを追加
         control.itemsProperty().addListener((ob, o, n) -> {
+            control.getSelectionModel().clearSelection();
             if (n == null) {
                 control.filteredItemsProperty.set(null);
                 control.sortedItemsProperty.set(null);
@@ -105,10 +108,7 @@ class DynamicTableViewSkin<T> extends SkinBase<DynamicTableView<T>> {
         });
 
         // Sortedリストにリスナを追加
-        ChangeListener<? super Comparator<? super T>> comparatorListener = (ob, o, n) -> {
-            control.getSelectionModel().clearSelection();
-            tableView.refresh();
-        };
+        ChangeListener<? super Comparator<? super T>> comparatorListener = (ob, o, n) -> resetTableView();
         control.sortedItemsProperty().addListener((ob, o, n) -> {
             if (o != null) {
                 o.removeListener(this::itemsChangeListener);
@@ -123,10 +123,7 @@ class DynamicTableViewSkin<T> extends SkinBase<DynamicTableView<T>> {
         control.getSortedItems().comparatorProperty().addListener(comparatorListener);
 
         // Filterリストにリスナを追加
-        ChangeListener<? super Predicate<? super T>> predicateListener = (ob, o, n) -> {
-            control.getSelectionModel().clearSelection();
-            tableView.refresh();
-        };
+        ChangeListener<? super Predicate<? super T>> predicateListener = (ob, o, n) -> resetTableView();
         control.filteredItemsProperty().addListener((ob, o, n) -> {
             if (o != null) {
                 o.predicateProperty().removeListener(predicateListener);
@@ -153,6 +150,11 @@ class DynamicTableViewSkin<T> extends SkinBase<DynamicTableView<T>> {
 
         // 列数プロパティが変更されたら画面の列数を最適化
         columnCountProperty.addListener((p, o, n) -> normalizeColumnCount());
+    }
+
+    private void resetTableView() {
+        control.getSelectionModel().clearSelection();
+        tableView.refresh();
     }
 
     /**
