@@ -9,7 +9,9 @@ import javafx.scene.Node;
 import javafx.scene.control.Control;
 import javafx.scene.control.Label;
 import javafx.scene.control.Skin;
+import javafx.scene.control.TableView;
 
+import java.util.Objects;
 import java.util.function.Supplier;
 
 /**
@@ -20,24 +22,28 @@ public class DynamicTableView<T> extends Control {
 
     private static final String DEFAULT_STYLE_CLASS = "dynamic-table-view";
 
-    /**
-     * 既定のセルの横幅
-     */
     private static final double DEFAULT_CELL_WIDTH = 200.0;
-
-    /**
-     * 既定のセルの高さ
-     */
     private static final double DEFAULT_CELL_HEIGHT = USE_COMPUTED_SIZE;
-
-    /**
-     * 既定のPlaceHolder
-     */
     private static final Label DEFAULT_PLACE_HOLDER = new Label();
 
-    /**
-     * コンストラクタ
-     */
+    private TableView<TableDataRowModel<T>> tableView;
+    TableView<TableDataRowModel<T>> getTableView() {
+        if (tableView == null) {
+            tableView = new TableView<>();
+            tableView.setItems(getDataModel().getRows());
+        }
+        return tableView;
+    }
+
+    private TableDataModel<T> dataModel;
+    TableDataModel<T> getDataModel() {
+        if (dataModel == null) {
+            dataModel = new TableDataModel<>();
+            dataModel.sortedItemsProperty().bind(sortedItemsProperty());
+        }
+        return dataModel;
+    }
+
     public DynamicTableView() {
         super();
         getStyleClass().add(DEFAULT_STYLE_CLASS);
@@ -235,7 +241,7 @@ public class DynamicTableView<T> extends Control {
 
     ReadOnlyObjectWrapper<DynamicTableViewSelectionModel<T>> selectionModelWrapper() {
         if (selectionModel == null) {
-            selectionModel = new ReadOnlyObjectWrapper<>(new DynamicTableViewSelectionModel<>());
+            selectionModel = new ReadOnlyObjectWrapper<>(new DynamicTableViewSelectionModel<>(getTableView(), getDataModel()));
         }
         return selectionModel;
     }
@@ -256,6 +262,24 @@ public class DynamicTableView<T> extends Control {
         return selectionModelWrapper().getReadOnlyProperty();
     }
 
+    /**
+     * 先頭の行にスクロールするメソッド。
+     */
+    public void scrollToTop() {
+        getTableView().scrollTo(0);
+    }
+
+    /**
+     * 最終行にスクロールするメソッド。
+     */
+    public void scrollToBottom() {
+        if (getTableView().getItems().isEmpty()) {
+            scrollToTop();
+            return;
+        }
+        getTableView().scrollTo(getTableView().getItems().size() - 1);
+    }
+
     @Override
     protected Skin<?> createDefaultSkin() {
         return new DynamicTableViewSkin<>(this);
@@ -266,7 +290,7 @@ public class DynamicTableView<T> extends Control {
     @Override
     public String getUserAgentStylesheet() {
         if (styleSheet == null) {
-            styleSheet = getClass().getResource("dynamictableview.css").toExternalForm();
+            styleSheet = Objects.requireNonNull(getClass().getResource("dynamictableview.css")).toExternalForm();
         }
         return styleSheet;
     }

@@ -19,17 +19,11 @@ class DynamicTableViewSkin<T> extends SkinBase<DynamicTableView<T>> {
 
     private final IntegerProperty columnCountProperty = new SimpleIntegerProperty();
 
-    private final TableDataModel<T> dataModel;
-
-    private final TableView<TableDataRowModel<T>> tableView;
-
     private final DynamicTableView<T> control;
 
     public DynamicTableViewSkin(DynamicTableView<T> control) {
         super(control);
         this.control = getSkinnable();
-        this.tableView = new TableView<>();
-        dataModel = new TableDataModel<>(columnCountProperty, control.sortedItemsProperty);
         init();
     }
 
@@ -40,10 +34,12 @@ class DynamicTableViewSkin<T> extends SkinBase<DynamicTableView<T>> {
     private void itemsChangeListener(ListChangeListener.Change<? extends T> c) {
         while (c.next()) {
             if (c.wasUpdated()) {
+                //noinspection StatementWithEmptyBody
                 for (int i = c.getFrom(); i < c.getTo(); i++) {
                     // TODO updated
                 }
             } else if (c.wasPermutated()) {
+                //noinspection StatementWithEmptyBody
                 for (int i = c.getFrom(); i < c.getTo(); i++) {
                     // TODO permutated
                 }
@@ -52,11 +48,11 @@ class DynamicTableViewSkin<T> extends SkinBase<DynamicTableView<T>> {
 
                     if (!changingColumnCount) {
 
-                        dataModel.normalizeRows();
+                        control.getDataModel().normalizeRows();
 
                         // 追加された要素を含む行を更新する
                         var indices = IntStream.range(c.getFrom(), c.getTo()).boxed().collect(Collectors.toList());
-                        dataModel.updateRowContainsItem(indices);
+                        control.getDataModel().updateRowContainsItem(indices);
 
                     }
 
@@ -64,9 +60,9 @@ class DynamicTableViewSkin<T> extends SkinBase<DynamicTableView<T>> {
 
                     if (!changingColumnCount) {
 
-                        dataModel.normalizeRows();
+                        control.getDataModel().normalizeRows();
 
-                        dataModel.updateRowIndexAfter(c.getFrom());
+                        control.getDataModel().updateRowIndexAfter(c.getFrom());
 
                     }
 
@@ -80,10 +76,10 @@ class DynamicTableViewSkin<T> extends SkinBase<DynamicTableView<T>> {
     private void init() {
         LOGGER.log(System.Logger.Level.DEBUG, "init instance");
 
-        control.getSelectionModel().inject(tableView, dataModel);
-
-        tableView.setItems(dataModel.getRows());
+        var tableView = control.getTableView();
         getChildren().add(tableView);
+
+        columnCountProperty.bindBidirectional(control.getDataModel().columnCountProperty());
 
         // TableViewのPlaceHolderプロパティ
         tableView.placeholderProperty().bind(control.placeHolderProperty());
@@ -95,6 +91,7 @@ class DynamicTableViewSkin<T> extends SkinBase<DynamicTableView<T>> {
 
         // アイテムリストが更新されたらFilterとSortedも更新するリスナを追加
         control.itemsProperty().addListener((ob, o, n) -> {
+            control.getSelectionModel().clearSelection();
             if (n == null) {
                 control.filteredItemsProperty.set(null);
                 control.sortedItemsProperty.set(null);
@@ -105,10 +102,7 @@ class DynamicTableViewSkin<T> extends SkinBase<DynamicTableView<T>> {
         });
 
         // Sortedリストにリスナを追加
-        ChangeListener<? super Comparator<? super T>> comparatorListener = (ob, o, n) -> {
-            control.getSelectionModel().clearSelection();
-            tableView.refresh();
-        };
+        ChangeListener<? super Comparator<? super T>> comparatorListener = (ob, o, n) -> resetTableView();
         control.sortedItemsProperty().addListener((ob, o, n) -> {
             if (o != null) {
                 o.removeListener(this::itemsChangeListener);
@@ -123,10 +117,7 @@ class DynamicTableViewSkin<T> extends SkinBase<DynamicTableView<T>> {
         control.getSortedItems().comparatorProperty().addListener(comparatorListener);
 
         // Filterリストにリスナを追加
-        ChangeListener<? super Predicate<? super T>> predicateListener = (ob, o, n) -> {
-            control.getSelectionModel().clearSelection();
-            tableView.refresh();
-        };
+        ChangeListener<? super Predicate<? super T>> predicateListener = (ob, o, n) -> resetTableView();
         control.filteredItemsProperty().addListener((ob, o, n) -> {
             if (o != null) {
                 o.predicateProperty().removeListener(predicateListener);
@@ -155,6 +146,11 @@ class DynamicTableViewSkin<T> extends SkinBase<DynamicTableView<T>> {
         columnCountProperty.addListener((p, o, n) -> normalizeColumnCount());
     }
 
+    private void resetTableView() {
+        control.getSelectionModel().clearSelection();
+        control.getTableView().refresh();
+    }
+
     /**
      * 現在の画面サイズとセルのサイズを考慮して列数を更新する。
      * @param viewWidth 画面サイズ
@@ -167,7 +163,7 @@ class DynamicTableViewSkin<T> extends SkinBase<DynamicTableView<T>> {
     private boolean changingColumnCount = false;
 
     private void normalizeColumnCount() {
-        int currentCount = tableView.getColumns().size();
+        int currentCount = control.getTableView().getColumns().size();
         int count = columnCountProperty.get();
 
         if (currentCount == count) return;
@@ -177,24 +173,24 @@ class DynamicTableViewSkin<T> extends SkinBase<DynamicTableView<T>> {
 
         if (count < currentCount) {
             for (int i = 0; i < currentCount - count; i++) {
-                tableView.getColumns().remove(currentCount - i - 1);
+                control.getTableView().getColumns().remove(currentCount - i - 1);
             }
         } else {
 
             for (int i = currentCount; i < count; i++) {
 
                 DynamicTableColumn<T> column = new DynamicTableColumn<>(control, i);
-                tableView.getColumns().add(column);
+                control.getTableView().getColumns().add(column);
 
             }
 
         }
 
         // 列数の変更に伴って行数も更新する
-        dataModel.normalizeRows();
+        control.getDataModel().normalizeRows();
 
         // すべての行を更新する
-        dataModel.getRows().forEach(TableDataRowModel::update);
+        control.getDataModel().getRows().forEach(TableDataRowModel::update);
 
         changingColumnCount = false;
     }
@@ -202,7 +198,7 @@ class DynamicTableViewSkin<T> extends SkinBase<DynamicTableView<T>> {
     @Override
     public void dispose() {
         super.dispose();
-        dataModel.getRows().forEach(TableDataRowModel::clear);
-        dataModel.getRows().clear();
+        control.getDataModel().getRows().forEach(TableDataRowModel::clear);
+        control.getDataModel().getRows().clear();
     }
 }

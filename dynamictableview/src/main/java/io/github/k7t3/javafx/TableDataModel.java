@@ -2,6 +2,8 @@ package io.github.k7t3.javafx;
 
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.SortedList;
@@ -13,17 +15,25 @@ class TableDataModel<T> {
 
     private final ObservableList<TableDataRowModel<T>> rows = FXCollections.observableArrayList();
 
-    private final IntegerProperty columnCountProperty;
+    public TableDataModel() {
+    }
 
-    private final ObjectProperty<SortedList<T>> sortedProperty;
+    private static final int DEFAULT_COLUMN_COUNT = 0;
 
-    public TableDataModel(IntegerProperty columnCountProperty, ObjectProperty<SortedList<T>> sortedProperty) {
-        this.columnCountProperty = columnCountProperty;
-        this.sortedProperty = sortedProperty;
+    private IntegerProperty columnCount;
+
+    public IntegerProperty columnCountProperty() {
+        if (columnCount == null) {
+            columnCount = new SimpleIntegerProperty(DEFAULT_COLUMN_COUNT);
+        }
+        return columnCount;
     }
 
     public int getColumnCount() {
-        return columnCountProperty.get();
+        if (columnCount == null) {
+            return DEFAULT_COLUMN_COUNT;
+        }
+        return columnCount.get();
     }
 
     public int getRowCount() {
@@ -34,8 +44,17 @@ class TableDataModel<T> {
         return rows;
     }
 
+    private ObjectProperty<SortedList<T>> sortedItems;
+
+    public ObjectProperty<SortedList<T>> sortedItemsProperty() {
+        if (sortedItems == null) {
+            sortedItems = new SimpleObjectProperty<>();
+        }
+        return sortedItems;
+    }
+
     public SortedList<T> getItems() {
-        return sortedProperty.get();
+        return sortedItemsProperty().get();
     }
 
     /**
@@ -72,7 +91,7 @@ class TableDataModel<T> {
     }
 
     private int calculateRowIndex(int itemIndex) {
-        var columnCount = columnCountProperty.get();
+        var columnCount = this.columnCount.get();
         if (columnCount < 1) {
             throw new IllegalStateException("no column");
         }
@@ -81,7 +100,7 @@ class TableDataModel<T> {
     }
 
     void normalizeRows() {
-        int columnCount = columnCountProperty.get();
+        int columnCount = this.columnCount.get();
         int rowCount = (int)Math.ceil(getItems().size() / (double)columnCount);
 
         normalizeRowCount(rowCount);
@@ -109,7 +128,7 @@ class TableDataModel<T> {
 
     T get(int rowIndex, int columnIndex) {
         int count = getItems().size();
-        int columnCount = columnCountProperty.get();
+        int columnCount = this.columnCount.get();
 
         int skip = rowIndex * columnCount;
         int index = skip + columnIndex;
